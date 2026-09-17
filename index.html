@@ -32,6 +32,8 @@
 .y{--cl:#fff3c4;--cb:#e3b640;--cd:#8a6210;--ct:#2a1d05}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%}
+/* A pull from the top must not reload the page out of a live game. */
+html,body{overscroll-behavior:none}
 body{margin:0;color:var(--ink);font-family:var(--body);font-size:14px;line-height:1.4;padding-inline:var(--gutter);padding-block:0;overflow-x:hidden;
   background:
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'%3E%3Cpath d='M14 2l3 12-3 12-3-12z' fill='%23d6a84e' fill-opacity='.045'/%3E%3Ccircle cx='0' cy='14' r='.9' fill='%23d6a84e' fill-opacity='.08'/%3E%3Ccircle cx='28' cy='14' r='.9' fill='%23d6a84e' fill-opacity='.08'/%3E%3C/svg%3E"),
@@ -45,6 +47,7 @@ input::placeholder{color:var(--ink-3)}
 h1,h2,h3{font-family:var(--display);font-weight:700;margin:0;text-wrap:balance;letter-spacing:.02em}
 .num{font-variant-numeric:tabular-nums}
 .screen{display:none;min-height:100%;flex-direction:column}
+#game.screen{height:100%;min-height:0}
 .screen.on{display:flex}
 [hidden]{display:none!important}
 .foil-text{background:var(--foil);-webkit-background-clip:text;background-clip:text;color:transparent}
@@ -110,7 +113,15 @@ h1,h2,h3{font-family:var(--display);font-weight:700;margin:0;text-wrap:balance;l
 .reconnect{display:inline-flex;margin-top:6px}
 
 /* ---------- Game ---------- */
-#game{gap:8px;padding-block:6px 76px;position:relative}
+/* The table fits the screen. fitBoard() sets --card-w from the space actually left
+   over, so nothing scrolls on a phone or on a tablet-width fold. */
+#game{gap:var(--rowgap,6px);padding-block:4px 0;position:relative;height:100%;overflow:hidden;justify-content:flex-start}
+#game > *{flex:0 0 auto}
+body.tight #game .section-label{display:none}
+body.tight #game .log{min-height:0;max-height:18px;overflow:hidden}
+body.tight #game .feed-line:not(.now){display:none}
+body.tight #game .player{padding:5px 8px;gap:3px 8px}
+body.tight #game{--rowgap:4px;--colgap:4px}
 /* The table the cards rest on: a felt weave under a soft pool of light. */
 #game::before{content:"";position:fixed;inset:-10% -20% -10% -20%;z-index:-1;pointer-events:none;
   background:
@@ -142,12 +153,26 @@ h1,h2,h3{font-family:var(--display);font-weight:700;margin:0;text-wrap:balance;l
 .player .score{font-family:var(--display);font-size:24px;line-height:1}
 .player .score small{font-family:var(--body);font-size:11px;color:var(--ink-3);margin-left:3px;-webkit-text-fill-color:var(--ink-3)}
 .player .holdings{grid-column:1/-1;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
-.bonus{display:inline-flex;align-items:center;gap:3px;font-size:12px;color:var(--ink-2)}
-.bonus i{width:14px;height:14px;border-radius:3px;display:inline-block}
+/* One cell per colour: what you can pay with, and where it comes from. */
+.wallet{grid-column:1/-1;display:grid;grid-template-columns:repeat(6,1fr);gap:4px}
+.wallet .cell{display:flex;flex-direction:column;align-items:center;gap:2px;padding:3px 0 2px;border-radius:8px;background:rgba(0,0,0,.22)}
+.wallet .cell.none{opacity:.38}
+.wallet .tot{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:13px;font-variant-numeric:tabular-nums}
+.wallet .split{display:flex;align-items:center;gap:4px;font-size:9px;line-height:1;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.wallet .split i{display:inline-flex;align-items:center;gap:2px;font-style:normal}
+.wallet .split i::before{content:"";width:7px;height:8px;border-radius:1.5px;background:currentColor;opacity:.75}
+.wallet .split i.t::before{width:8px;height:8px;border-radius:50%}
+.wallet .split i.c{color:var(--gold)}
+.wallet .split i.t{color:var(--ink-2)}
+.player.me .wallet .tot{width:30px;height:30px;font-size:15px}
+.player.me .wallet .split{font-size:10px}
+body.tight .wallet .split{display:none}
+body.tight .wallet .cell{padding:2px 0}
 .sep{width:1px;height:16px;background:var(--line);margin:0 2px}
 .mini-nobles{display:flex;gap:3px}
 .mini-nobles i{width:16px;height:16px;border-radius:50%;background:var(--foil);display:inline-block;box-shadow:0 0 0 1px rgba(0,0,0,.5)}
-.reserved-strip{grid-column:1/-1;display:flex;gap:6px;align-items:center}
+.reserved-strip{grid-column:1/-1;display:flex;gap:6px;align-items:center;min-height:62px}
 .reserved-strip .label{font-size:11px;color:var(--ink-3);letter-spacing:.08em;text-transform:uppercase}
 .reserved-strip .card,.reserved-strip .hidden-card{transform-origin:bottom center}
 .reserved-strip .card:nth-of-type(1){rotate:-7deg}
@@ -156,14 +181,16 @@ h1,h2,h3{font-family:var(--display);font-weight:700;margin:0;text-wrap:balance;l
 
 .section-label{font-size:11px;color:var(--gold);letter-spacing:.16em;text-transform:uppercase;margin:2px 0 -2px;opacity:.85}
 .nobles{display:flex;gap:8px;justify-content:flex-start}
-.noble{width:62px;height:58px;border-radius:7px;position:relative;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,.5),0 0 0 1px rgba(214,168,78,.45)}
+.noble{width:calc(var(--card-w,66px) * .95);height:calc(var(--card-w,66px) * .88);border-radius:7px;position:relative;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,.5),0 0 0 1px rgba(214,168,78,.45)}
 .noble svg{position:absolute;inset:0;width:100%;height:100%;display:block}
 .noble .pts{position:absolute;top:3px;left:4px;font-family:var(--display);font-size:12px;line-height:1;color:var(--gold-2);background:rgba(14,7,9,.85);padding:2px 5px;border-radius:4px;box-shadow:0 0 0 1px rgba(214,168,78,.6)}
 .noble .req{position:absolute;right:3px;bottom:3px;display:flex;gap:2px}
 .noble .req i{width:14px;height:14px;border-radius:3px;font-size:9px;display:inline-flex;align-items:center;justify-content:center;font-weight:700}
 .noble.ok{box-shadow:0 0 0 2px var(--ok),0 0 12px rgba(95,191,122,.4)}
 
-.tier{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.tier{display:flex;gap:var(--colgap,6px);justify-content:center;flex:0 0 auto}
+#game .tier > *{width:var(--card-w,66px);flex:0 0 auto}
+.nobles{--noble-w:var(--card-w,66px)}
 .card{position:relative;width:100%;aspect-ratio:66/92;border-radius:7px;overflow:hidden;background:var(--raised);
   display:flex;flex-direction:column;justify-content:space-between;text-align:left;
   rotate:var(--tilt,0deg);
@@ -302,7 +329,7 @@ h1,h2,h3{font-family:var(--display);font-weight:700;margin:0;text-wrap:balance;l
    an arrow drawn to it, and a card that never covers what it is pointing at. */
 .coach{position:fixed;inset:0;z-index:24;pointer-events:none}
 .coach-svg{position:absolute;inset:0;width:100%;height:100%;display:block}
-.coach-card{position:absolute;left:var(--gutter);right:var(--gutter);max-width:480px;margin-inline:auto;
+.coach-card{position:absolute;left:var(--gutter);right:var(--gutter);max-width:480px;margin-inline:auto;max-height:46vh;overflow:auto;
   background:linear-gradient(180deg,#2b2436,#1e1828);border:1px solid #7a5f22;border-radius:14px;
   padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px));pointer-events:auto;
   box-shadow:0 14px 40px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.07);
@@ -324,10 +351,32 @@ h1,h2,h3{font-family:var(--display);font-weight:700;margin:0;text-wrap:balance;l
 .coach-ring{animation:coachRing 1.6s ease-in-out infinite}
 @media (prefers-reduced-motion:reduce){.coach-ring{animation:none}}
 body.tut-on{overscroll-behavior:contain}
-body.tut-on #game{padding-top:250px;padding-bottom:280px}
 /* Placement classes on <body>; kept distinct from .coach-top inside the card. */
 body.tut-on .actionbar{z-index:23}
-@media (min-width:520px){:root{--gutter:20px}#game{max-width:520px;margin-inline:auto;width:100%}.actionbar{max-width:520px;margin-inline:auto}}
+@media (min-width:520px){:root{--gutter:20px}}
+#game,.actionbar{max-width:min(760px,100%);margin-inline:auto;width:100%}
+/* Wider than tall: the market on the left, the players beside it. Rows are shared,
+   so the side column can never be taller than the market it sits next to. */
+@media (orientation:landscape) and (min-width:700px){
+  #game{display:grid;max-width:100%;
+    grid-template-columns:minmax(0,1fr) minmax(230px,320px);
+    grid-template-rows:auto auto auto auto auto;
+    column-gap:16px;row-gap:6px;align-content:start}
+  #game .section-label{display:none}
+  #game .topbar{grid-area:1/1/2/2}
+  #game #nobles{grid-area:2/1/3/2;justify-content:flex-start}
+  #game #tier3{grid-area:3/1/4/2}
+  #game #tier2{grid-area:4/1/5/2}
+  #game #tier1{grid-area:5/1/6/2}
+  #game #banner{grid-area:1/2/2/3}
+  #game #opp{grid-area:2/2/3/3}
+  #game #bank{grid-area:3/2/4/3}
+  #game #me{grid-area:4/2/5/3}
+  #game #log{grid-area:5/2/6/3}
+  #game #banner,#game #opp,#game #bank,#game #me,#game #log{align-self:start;min-width:0}
+  #game .tier{justify-content:flex-start}
+  .actionbar{max-width:100%}
+}
 </style>
 </head>
 <body>
@@ -348,7 +397,7 @@ body.tut-on .actionbar{z-index:23}
   <div class="panel" id="authPanel">
     <h2 data-i18n="auth.title"></h2>
     <input id="name" maxlength="16" autocomplete="nickname">
-    <input id="pass" type="password" maxlength="64" autocomplete="current-password">
+    <input id="authPass" type="password" maxlength="64" autocomplete="current-password">
     <button class="btn primary" id="loginBtn" data-i18n="auth.go"></button>
     <p class="note" data-i18n="auth.hint"></p>
   </div>
@@ -587,24 +636,29 @@ var I18N = {
     log:{take:'{name}: {gems} 획득', reserve:'{name}: {tier}단계 카드 예약', reserveDeck:'{name}: {tier}단계 덱에서 비공개 예약', buy:'{name}: {color} 카드 구매 (+{pts}점)', noble:'{name}: 귀족 방문 (+3점)', discard:'{name}: 토큰 반납', pass:'{name}: 차례 넘김'},
     err:{passShort:'비밀번호는 4자 이상이어야 해요', notLoggedIn:'먼저 로그인하세요', sessionExpired:'로그인이 만료됐어요. 다시 로그인하세요', friendOffline:'친구가 접속 중이 아니에요', friendBusy:'친구가 다른 게임 중이에요', alreadyPlaying:'이미 게임 중이에요', inviteGone:'신청이 만료됐어요', badFriendCode:'친구 코드가 올바르지 않아요', cannotClaim:'아직 기다려야 해요', notYourTurn:'내 차례가 아니에요', badTake:'서로 다른 색 3개 또는 같은 색 2개만 가져올 수 있어요', needFour:'같은 색 2개는 은행에 4개 이상 있을 때만 가능해요', bankShort:'은행에 보석이 부족해요', cantAfford:'보석이 부족해요', reserveFull:'예약은 3장까지만 가능해요', roomFull:'방이 가득 찼어요', roomNotFound:'방을 찾을 수 없어요. 코드를 확인하세요', invalidAction:'할 수 없는 행동이에요', cardGone:'그 카드는 이미 없어요', deckEmpty:'덱이 비었어요', discardCount:'정확한 개수를 돌려주세요', mustDiscard:'먼저 토큰을 돌려주세요', mustChooseNoble:'먼저 귀족을 선택하세요', gameOver:'게임이 끝났어요', noServer:'서버에 연결할 수 없어요. 한 기기 모드로 플레이하세요.', nameNeeded:'이름을 입력하세요'},
     tut:{btn:'튜토리얼 (처음이라면 여기부터)', skip:'그만두기', next:'다음', done:'이제 직접 해보기', bot:'컴퓨터',
-      notNow:'지금은 빛나는 곳만 누를 수 있어요', rigged:'연습을 위해 보석을 채웠어요',
+      notNow:'지금은 빛나는 곳만 누를 수 있어요', watching:'컴퓨터가 두는 중…', oppTook:'컴퓨터가 가져간 보석: {gems}', oppBought:'컴퓨터가 산 카드: {color}', oppReserved:'컴퓨터가 카드를 예약했어요', rigged:'연습을 위해 보석을 채웠어요',
       s:{
         goal:{h:'이기는 조건', p:'카드와 귀족을 모아 <b>15점</b>에 먼저 닿으면 이깁니다. 화면 <b>아래쪽이 나</b>, <b>위쪽이 상대</b>예요. 지금은 둘 다 0점입니다.'},
-        rows:{h:'가운데 세 줄이 시장', p:'여기 깔린 카드를 사서 점수를 모읍니다. 맨 아래 <b>I</b>줄이 가장 싸고 점수가 거의 없어요. 위로 갈수록 비싸지고 점수가 높아집니다. 맨 위가 <b>III</b>줄이에요.'},
+        rows:{h:'가운데 세 줄이 시장', p:'여기 깔린 카드를 사서 점수를 모읍니다. 맨 아래 <b>I</b>줄이 가장 싸고 점수가 거의 없어요. 위로 갈수록 비싸지고 점수가 높아집니다. 맨 위가 <b>III</b>줄이에요.<br><b>왜 중요한가:</b> 처음에는 I줄 카드를 사서 할인을 쌓고, 그 할인으로 III줄 카드를 사는 것이 기본 흐름입니다.'},
         cardPts:{h:'왼쪽 위 숫자 = 점수', p:'이 카드를 사면 이 숫자만큼 점수를 받습니다. 이런 점수를 더해 <b>15점</b>을 만드는 것이 목표예요. I줄 카드는 대부분 0점, III줄 카드는 3~5점입니다.'},
-        cardGem:{h:'오른쪽 위 보석 = 영구 할인', p:'카드를 사면 그 색 보석을 <b>1개 영원히 가진 것</b>으로 쳐줍니다. 다음부터 카드를 살 때 그 색 가격이 1개씩 깎여요. 이 할인을 쌓는 것이 이 게임의 핵심입니다.'},
+        cardGem:{h:'오른쪽 위 보석 = 영구 할인', p:'카드를 사면 그 색 보석을 <b>1개 영원히 가진 것</b>으로 쳐줍니다. 다음부터 그 색 가격이 1개씩 깎여요.<br><b>왜 중요한가:</b> 0점짜리 싼 카드도 사는 이유가 이것입니다. 점수가 아니라 할인을 사는 거예요.'},
         cardCost:{h:'아래 동그라미 = 가격', p:'이 카드를 사려면 색깔별로 이만큼의 보석이 필요합니다. 내가 가진 할인만큼 빼고 내면 돼요.'},
         bank:{h:'보석 은행', p:'차례마다 여기서 보석을 가져옵니다. 동그라미 안 숫자는 은행에 남은 개수예요. 맨 오른쪽 <b>황금</b>은 직접 가져올 수 없고, 카드를 예약할 때만 받습니다.'},
-        myPanel:{h:'내 판 읽는 법', p:'왼쪽 네모 다섯 개는 <b>내 카드가 주는 할인</b>, 오른쪽 동그라미 여섯 개는 <b>지금 내가 가진 보석</b>이에요. 지금은 전부 0입니다.'},
-        nobles:{h:'맨 위 줄은 귀족', p:'귀족은 각각 <b>3점</b>입니다. 조건은 보석이 아니라 <b>내가 산 카드의 색 개수</b>예요. 예를 들어 파란 카드 4장과 검은 카드 4장을 모으면 내 차례가 끝날 때 저절로 찾아옵니다. 돈으로 살 수는 없어요.'},
-        take3:{h:'보석 3개 가져오기', p:'차례에 할 수 있는 가장 기본 행동입니다. <b>서로 다른 색 3개</b>를 가져와요. 빛나는 흰색, 파란색, 초록색을 차례로 누른 다음 아래 <b>가져오기</b>를 누르세요.', do:'흰색 · 파란색 · 초록색을 누르고 가져오기'},
-        take2:{h:'같은 색 2개 가져오기', p:'같은 색을 2개 가져올 수도 있습니다. 단 <b>그 색이 은행에 4개 이상</b> 남아 있을 때만 돼요. 빨간색이 4개 남았네요. 빨간색을 <b>두 번</b> 누르고 가져오기를 누르세요.', do:'빨간색을 두 번 누르고 가져오기'},
+        myPanel:{h:'내 보석 읽는 법', p:'색깔마다 칸이 하나입니다. 가운데 큰 숫자가 <b>그 색으로 낼 수 있는 총합</b>이에요. 그 아래 작은 두 숫자는 그중 <b>카드로 생긴 영구 할인</b>(네모)과 <b>지금 손에 든 보석</b>(동그라미)입니다. 카드를 사도 네모는 줄지 않고, 동그라미만 줄어들어요.'},
+        nobles:{h:'맨 위 줄은 귀족', p:'귀족은 각각 <b>3점</b>입니다. 조건은 보석이 아니라 <b>내가 산 카드의 색 개수</b>예요.<br><b>왜 중요한가:</b> 15점 중 3점을 한 번에 주므로, 어떤 귀족이 깔려 있는지 보고 카드 색을 몰아 모으면 훨씬 빠릅니다.'},
+        take3:{h:'보석 3개 가져오기', p:'차례에 할 수 있는 가장 기본 행동입니다. <b>서로 다른 색 3개</b>를 가져와요.<br><b>왜 이렇게 두는가:</b> 한 번에 가장 많이 받는 방법이라 초반에는 거의 항상 이 행동을 합니다. 빛나는 흰색, 파란색, 초록색을 누른 다음 <b>가져오기</b>를 누르세요.', do:'흰색 · 파란색 · 초록색을 누르고 가져오기'},
+        oppTake:{h:'이제 컴퓨터 차례', p:'차례는 번갈아 옵니다. 상대가 무엇을 가져가는지 보세요. 위쪽 판의 숫자가 바뀝니다.<br><b>왜 봐야 하는가:</b> 상대가 모으는 색을 보면 어떤 카드를 노리는지 짐작할 수 있어요.'},
+        take2:{h:'같은 색 2개 가져오기', p:'같은 색을 2개 가져올 수도 있습니다. 단 <b>그 색이 은행에 4개 이상</b> 남아 있을 때만 돼요. 지금은 <b>{color}</b> 보석이 조건을 채웠습니다.<br><b>왜 이렇게 두는가:</b> 특정 카드에 그 색이 많이 필요할 때 씁니다. 3개를 받는 것보다 총량은 손해지만, 노리는 카드를 한 턴 빨리 살 수 있으면 이득이에요. 빛나는 보석을 <b>두 번</b> 누르고 가져오기를 누르세요.', do:'빛나는 보석을 두 번 누르고 가져오기'},
         buyPick:{h:'살 수 있는 카드', p:'연습을 위해 부족한 보석을 채워드렸어요. <b>초록 테두리</b>는 지금 살 수 있다는 표시입니다. 빛나는 카드를 누르세요.', p2:'방금 모은 보석으로 벌써 살 수 있는 카드가 있어요. <b>초록 테두리</b>가 그 표시입니다. 빛나는 카드를 누르세요.', do:'빛나는 카드를 누르세요'},
         buyDo:{h:'구매하기', p:'카드를 누르면 가격과 내가 가진 보석이 나란히 보입니다. <b>구매하기</b>를 누르세요.', do:'구매하기를 누르세요'},
-        bonus:{h:'방금 생긴 할인', p:'산 카드의 색이 여기서 <b>1</b>로 올라갔습니다. 앞으로 그 색 가격이 1개씩 깎여요. 카드를 모을수록 비싼 카드가 점점 싸집니다. 이 눈덩이를 굴리는 것이 이 게임이에요.'},
-        reserve:{h:'예약이란 무엇인가', p:'카드 더미(덱)를 누르면 <b>맨 위 카드를 아무에게도 보여주지 않고</b> 내 손으로 가져옵니다. 상대는 그게 무슨 카드인지 모릅니다. 대신 <b>황금 1개</b>를 받아요. 지금 <b>III</b> 덱을 눌러보세요.', do:'III 덱을 누르세요'},
-        gold:{h:'황금은 만능 보석', p:'황금은 <b>어떤 색 대신으로도</b> 쓸 수 있습니다. 비싼 카드를 노릴 때 예약으로 황금을 모으는 방법이 있어요. 예약한 카드는 나중에 내가 살 수 있고, 예약은 <b>3장까지</b>입니다.'},
-        limit:{h:'보석은 10개까지', p:'보석 토큰은 최대 <b>10개</b>만 가질 수 있어요. 넘으면 차례가 끝날 때 남는 만큼 은행에 돌려줘야 합니다.'},
+        bonus:{h:'방금 생긴 할인', p:'이 칸의 네모 숫자가 <b>1</b>로 올라갔습니다. 낸 보석은 은행으로 돌아갔지만, 이 할인은 게임이 끝날 때까지 남아요.<br><b>왜 중요한가:</b> 할인이 쌓일수록 같은 보석으로 더 비싼 카드를 살 수 있습니다. 이 눈덩이를 굴리는 것이 이 게임이에요.'},
+        oppBuy:{h:'다시 컴퓨터 차례', p:'상대의 수를 한 번 더 보세요. 상대도 같은 방식으로 할인을 쌓고 있습니다.<br><b>왜 봐야 하는가:</b> 상대가 거의 살 수 있는 카드가 보이면, 그 카드를 먼저 사거나 <b>예약</b>해서 가져가지 못하게 할 수 있어요. 다음에 그 방법을 배웁니다.'},
+        reserveCard:{h:'깔린 카드도 예약할 수 있어요', p:'예약은 카드를 <b>내 손에 찜해 두는 것</b>입니다. 지금은 못 사도 나중에 내가 살 수 있고, 그동안 상대는 그 카드를 가져갈 수 없어요.<br><b>언제 쓰는가:</b> ① 상대가 노리는 카드를 가로챌 때 ② 비싼 카드를 미리 확보하고 천천히 보석을 모을 때. 빛나는 카드를 누르세요.', do:'빛나는 카드를 누르세요'},
+        reserveDo:{h:'예약하기', p:'이번에는 구매가 아니라 <b>예약하기</b>를 누릅니다. 카드가 내 손으로 오고 <b>황금 1개</b>를 받아요.', do:'예약하기를 누르세요'},
+        reserveDeck:{h:'덱에서 비공개로 예약', p:'카드 더미(덱)를 눌러도 예약할 수 있습니다. 이때는 <b>맨 위 카드를 아무에게도 보여주지 않고</b> 가져와요. 상대는 그게 무슨 카드인지 모릅니다.<br><b>언제 쓰는가:</b> 깔린 카드 중 원하는 게 없는데 황금은 필요할 때, 또는 내 계획을 숨기고 싶을 때 씁니다. <b>III</b> 덱을 눌러보세요.', do:'III 덱을 누르세요'},
+        gold:{h:'황금은 만능 보석', p:'황금은 <b>어떤 색 대신으로도</b> 쓸 수 있습니다. 예약은 3장까지이고, 예약할 때마다 황금을 1개 받아요.<br><b>왜 중요한가:</b> 한 색이 2개 모자라 못 사는 상황에서 황금이 그 자리를 메워 한두 턴을 벌어 줍니다.'},
+        limit:{h:'보석은 10개까지', p:'손에 든 보석(동그라미)은 최대 <b>10개</b>입니다. 넘으면 차례가 끝날 때 돌려줘야 해요. 네모(할인)는 개수 제한이 없습니다.<br><b>왜 중요한가:</b> 보석을 쌓아두기만 하면 손해입니다. 모으면 바로 카드로 바꾸세요.'},
+        plan:{h:'정리: 이렇게 두면 좋아요', p:'① 초반에는 보석 3개씩 가져오며 <b>I줄의 싼 카드</b>를 사서 할인을 쌓습니다.<br>② 깔린 <b>귀족</b>을 보고 그 색 카드를 몰아 모읍니다.<br>③ 할인이 쌓이면 <b>II·III줄</b>의 점수 높은 카드로 넘어갑니다.<br>④ 상대가 노리는 카드는 <b>예약</b>으로 가로챕니다.'},
         end:{h:'준비 끝', p:'이제 컴퓨터와 자유롭게 겨뤄보세요. <b>15점</b>에 먼저 닿는 쪽이 이깁니다. 위쪽 <b>?</b> 버튼으로 규칙을 언제든 다시 볼 수 있어요.'}
       }},
     roomTitle:'방 코드로 놀기', roomHint:'친구 목록에 없는 사람과 할 때 쓰세요.',
@@ -640,25 +694,30 @@ var I18N = {
     log:{take:'{name}: toma {gems}', reserve:'{name}: reserva una carta de nivel {tier}', reserveDeck:'{name}: reserva a ciegas del nivel {tier}', buy:'{name}: compra {color} (+{pts} pts)', noble:'{name}: visita de un noble (+3 pts)', discard:'{name}: devuelve fichas', pass:'{name}: pasa el turno'},
     err:{passShort:'La contraseña necesita al menos 4 caracteres', notLoggedIn:'Entra primero en tu cuenta', sessionExpired:'La sesión ha caducado. Vuelve a entrar', friendOffline:'Ese amigo no está conectado', friendBusy:'Ese amigo está en otra partida', alreadyPlaying:'Ya estás en una partida', inviteGone:'La invitación ha caducado', badFriendCode:'El código de amigo no es válido', cannotClaim:'Todavía hay que esperar', notYourTurn:'No es tu turno', badTake:'Solo puedes tomar 3 gemas distintas o 2 iguales', needFour:'Para tomar 2 iguales debe haber al menos 4 en el banco', bankShort:'No hay suficientes gemas en el banco', cantAfford:'No tienes gemas suficientes', reserveFull:'Solo puedes reservar 3 cartas', roomFull:'La sala está llena', roomNotFound:'No se encontró la sala. Revisa el código', invalidAction:'Esa acción no es válida', cardGone:'Esa carta ya no está', deckEmpty:'El mazo está vacío', discardCount:'Devuelve exactamente la cantidad indicada', mustDiscard:'Primero devuelve fichas', mustChooseNoble:'Primero elige un noble', gameOver:'La partida terminó', noServer:'No se puede conectar con el servidor. Juega en un solo dispositivo.', nameNeeded:'Escribe tu nombre'},
     tut:{btn:'Tutorial (empieza aquí)', skip:'Salir', next:'Siguiente', done:'Jugar por mi cuenta', bot:'Máquina',
-      notNow:'Ahora solo se puede tocar lo que brilla', rigged:'Te hemos dado gemas para practicar',
+      notNow:'Ahora solo se puede tocar lo que brilla', watching:'La máquina está jugando…', oppTook:'La máquina se llevó: {gems}', oppBought:'La máquina compró una carta {color}', oppReserved:'La máquina reservó una carta', rigged:'Te hemos dado gemas para practicar',
       s:{
         goal:{h:'Cómo se gana', p:'Gana quien llega primero a <b>15 puntos</b> con cartas y nobles. Abajo estás <b>tú</b>, arriba está <b>tu rival</b>. Ahora mismo vais 0 a 0.'},
-        rows:{h:'Las tres filas del centro son el mercado', p:'Compras estas cartas para sumar puntos. La fila de abajo, <b>I</b>, es la más barata y casi no da puntos. Cuanto más arriba, más caras y más puntos. La de arriba es la <b>III</b>.'},
-        cardPts:{h:'Arriba a la izquierda: los puntos', p:'Es lo que suma esa carta cuando la compras. Sumando esos números llegas a <b>15</b>. Las de la fila I casi siempre valen 0; las de la III valen de 3 a 5.'},
-        cardGem:{h:'Arriba a la derecha: descuento permanente', p:'Al comprarla es como si tuvieras <b>una gema de ese color para siempre</b>. A partir de ahí, cada carta te cuesta una gema menos de ese color. Acumular estos descuentos es el corazón del juego.'},
-        cardCost:{h:'Abajo: el precio', p:'Estas gemas necesitas para comprarla, por colores. De ese precio se restan los descuentos que ya tengas.'},
-        bank:{h:'El banco de gemas', p:'De aquí tomas gemas en tu turno. El número dice cuántas quedan. El <b>oro</b>, a la derecha, no se puede tomar directamente: solo llega al reservar una carta.'},
-        myPanel:{h:'Tu panel', p:'Los cinco cuadrados de la izquierda son <b>los descuentos de tus cartas</b>. Los seis círculos de la derecha son <b>las gemas que tienes ahora</b>. Todo está a cero.'},
-        nobles:{h:'La fila de arriba son nobles', p:'Cada noble vale <b>3 puntos</b>. Su requisito no son gemas, sino <b>cuántas cartas de cada color</b> tienes. Por ejemplo 4 azules y 4 negras: al acabar tu turno viene solo. No se compran.'},
-        take3:{h:'Tomar 3 gemas', p:'Es la acción más básica del turno: <b>3 gemas de colores distintos</b>. Toca la blanca, la azul y la verde que brillan, y luego <b>Tomar</b> abajo.', do:'Blanca, azul, verde y luego Tomar'},
-        take2:{h:'Tomar 2 iguales', p:'También puedes llevarte 2 gemas del mismo color, pero solo si <b>quedan 4 o más en el banco</b>. De la roja quedan 4. Tócala <b>dos veces</b> y pulsa Tomar.', do:'Toca la roja dos veces y luego Tomar'},
+        rows:{h:'Las tres filas del centro son el mercado', p:'Compras estas cartas para sumar puntos. La de abajo, <b>I</b>, es la más barata y casi no da puntos. Cuanto más arriba, más caras y más puntos. La de arriba es la <b>III</b>.<br><b>Por qué importa:</b> al principio compras cartas de la fila I para acumular descuentos, y con esos descuentos llegas a la fila III.'},
+        cardPts:{h:'Arriba a la izquierda: los puntos', p:'Es lo que suma esa carta cuando la compras. Sumando esos números llegas a <b>15</b>. Las de la fila I casi siempre valen 0; las de la III, de 3 a 5.'},
+        cardGem:{h:'Arriba a la derecha: descuento permanente', p:'Al comprarla es como tener <b>una gema de ese color para siempre</b>. Desde entonces cada carta cuesta una menos de ese color.<br><b>Por qué importa:</b> por eso se compran cartas baratas que no dan puntos. No compras puntos, compras descuento.'},
+        cardCost:{h:'Abajo: el precio', p:'Estas gemas cuesta la carta, por colores. De ese precio se restan los descuentos que ya tengas.'},
+        bank:{h:'El banco de gemas', p:'De aquí tomas gemas en tu turno. El número dice cuántas quedan. El <b>oro</b>, a la derecha, no se toma directamente: solo llega al reservar una carta.'},
+        myPanel:{h:'Leer tus gemas', p:'Hay una casilla por color. El número grande es <b>con cuánto puedes pagar de ese color</b>. Debajo, los dos números pequeños dicen cuánto viene de <b>descuentos de cartas</b> (cuadrado) y cuánto son <b>gemas en mano</b> (círculo). Al comprar solo bajan las gemas; el cuadrado no baja nunca.'},
+        nobles:{h:'La fila de arriba son nobles', p:'Cada noble vale <b>3 puntos</b>. Su requisito no son gemas, sino <b>cuántas cartas de cada color</b> tienes.<br><b>Por qué importa:</b> son 3 de los 15 puntos de golpe, así que mira qué nobles hay y concentra tus cartas en esos colores.'},
+        take3:{h:'Tomar 3 gemas', p:'La acción más básica del turno: <b>3 gemas de colores distintos</b>.<br><b>Por qué se juega así:</b> es lo que más te da de una vez, así que al principio casi siempre harás esto. Toca la blanca, la azul y la verde que brillan y pulsa <b>Tomar</b>.', do:'Blanca, azul, verde y luego Tomar'},
+        oppTake:{h:'Ahora juega la máquina', p:'Los turnos se alternan. Fíjate en lo que se lleva: los números del panel de arriba cambian.<br><b>Por qué mirar:</b> los colores que junta tu rival te dicen qué carta está persiguiendo.'},
+        take2:{h:'Tomar 2 iguales', p:'También puedes llevarte 2 del mismo color, pero solo si <b>quedan 4 o más en el banco</b>. Ahora mismo cumple <b>{color}</b>.<br><b>Por qué se juega así:</b> sirve cuando una carta te pide mucho de un color. Recibes menos que con 3, pero comprar un turno antes compensa. Toca <b>dos veces</b> la gema que brilla y pulsa Tomar.', do:'Toca dos veces la gema que brilla y luego Tomar'},
         buyPick:{h:'Una carta a tu alcance', p:'Te hemos completado las gemas que faltaban. El <b>borde verde</b> significa que puedes comprarla ya. Toca la carta que brilla.', p2:'Con las gemas que acabas de reunir ya puedes comprar una carta. El <b>borde verde</b> lo indica. Toca la que brilla.', do:'Toca la carta que brilla'},
         buyDo:{h:'Comprar', p:'Al tocar una carta ves su precio junto a lo que tienes. Pulsa <b>Comprar</b>.', do:'Pulsa Comprar'},
-        bonus:{h:'Tu primer descuento', p:'El color de la carta comprada ha subido a <b>1</b> aquí. A partir de ahora ese color te cuesta una gema menos. Cuantas más cartas, más baratas salen las caras: así crece la bola de nieve.'},
-        reserve:{h:'Qué es reservar', p:'Al tocar un mazo te llevas <b>la carta de arriba sin enseñársela a nadie</b>. Tu rival no sabe cuál es. A cambio recibes <b>1 oro</b>. Toca ahora el mazo <b>III</b>.', do:'Toca el mazo III'},
-        gold:{h:'El oro sustituye a cualquier gema', p:'El oro vale <b>por cualquier color</b>. Reservar para juntar oro es una forma de preparar una carta cara. Las cartas reservadas puedes comprarlas más tarde, y solo caben <b>3</b>.'},
-        limit:{h:'Máximo 10 fichas', p:'No puedes tener más de <b>10</b> fichas de gema. Si te pasas, al final del turno devuelves las que sobren.'},
-        end:{h:'Listo', p:'Ahora juega libremente contra la máquina. Gana quien llegue antes a <b>15 puntos</b>. Con el botón <b>?</b> de arriba puedes releer las reglas.'}
+        bonus:{h:'Tu primer descuento', p:'El cuadrado de esta casilla ha subido a <b>1</b>. Las gemas que pagaste volvieron al banco, pero este descuento se queda hasta el final.<br><b>Por qué importa:</b> cuanto más descuento, más cara es la carta que alcanzas con las mismas gemas. Esa bola de nieve es el juego.'},
+        oppBuy:{h:'Otra vez la máquina', p:'Mira su jugada una vez más: también está acumulando descuentos.<br><b>Por qué mirar:</b> si ves una carta que tu rival casi puede pagar, puedes comprarla antes o <b>reservarla</b> para que no la tenga. Eso se aprende ahora.'},
+        reserveCard:{h:'Las cartas del mercado también se reservan', p:'Reservar es <b>guardarte una carta en la mano</b>. Aunque hoy no puedas pagarla, será tuya para comprar más tarde y mientras tanto tu rival no puede llevársela.<br><b>Cuándo usarlo:</b> 1) para quitarle una carta que persigue 2) para asegurarte una carta cara mientras juntas gemas con calma. Toca la carta que brilla.', do:'Toca la carta que brilla'},
+        reserveDo:{h:'Reservar', p:'Esta vez no compras: pulsa <b>Reservar</b>. La carta pasa a tu mano y recibes <b>1 oro</b>.', do:'Pulsa Reservar'},
+        reserveDeck:{h:'Reservar a ciegas del mazo', p:'También puedes reservar tocando un mazo. Entonces te llevas <b>la carta de arriba sin enseñársela a nadie</b>: tu rival no sabe cuál es.<br><b>Cuándo usarlo:</b> cuando ninguna carta del mercado te sirve pero quieres el oro, o cuando prefieres esconder tu plan. Toca el mazo <b>III</b>.', do:'Toca el mazo III'},
+        gold:{h:'El oro sustituye a cualquier gema', p:'El oro vale <b>por cualquier color</b>. Puedes tener 3 cartas reservadas y cada reserva te da un oro.<br><b>Por qué importa:</b> cuando te faltan una o dos gemas de un color, el oro las cubre y te ahorra turnos.'},
+        limit:{h:'Máximo 10 fichas', p:'Las gemas en mano (círculo) no pueden pasar de <b>10</b>; lo que sobre se devuelve al final del turno. Los descuentos (cuadrado) no tienen límite.<br><b>Por qué importa:</b> acumular gemas sin gastarlas es perder tiempo. En cuanto puedas, conviértelas en cartas.'},
+        plan:{h:'Resumen: cómo jugar bien', p:'1) Al principio toma 3 gemas y compra <b>cartas baratas de la fila I</b> para acumular descuentos.<br>2) Mira qué <b>nobles</b> hay y concentra tus cartas en esos colores.<br>3) Con descuentos suficientes, pasa a las <b>filas II y III</b>, que dan puntos.<br>4) <b>Reserva</b> las cartas que tu rival persigue.'},
+        end:{h:'Listo', p:'Ahora juega libremente contra la máquina. Gana quien llegue antes a <b>15 puntos</b>. Con el botón <b>?</b> puedes releer las reglas.'}
       }},
     roomTitle:'Jugar con un código de sala', roomHint:'Para jugar con alguien que no está en tu lista.',
     auth:{title:'Entrar / Registrarse', nick:'Apodo', pass:'Contraseña', go:'Entrar', hint:'Si es tu primera vez, escribe el apodo y la contraseña que quieras: con eso queda creada la cuenta. Podrás volver a entrar con los mismos datos.', logout:'Salir de la cuenta'},
@@ -693,24 +752,29 @@ var I18N = {
     log:{take:'{name}: takes {gems}', reserve:'{name}: reserves a level {tier} card', reserveDeck:'{name}: reserves blind from level {tier}', buy:'{name}: buys {color} (+{pts} pts)', noble:'{name}: noble visit (+3 pts)', discard:'{name}: returns tokens', pass:'{name}: passes'},
     err:{passShort:'The password needs at least 4 characters', notLoggedIn:'Sign in first', sessionExpired:'Your session expired. Sign in again', friendOffline:'That friend is not online', friendBusy:'That friend is in another game', alreadyPlaying:'You are already in a game', inviteGone:'The invitation expired', badFriendCode:'That friend code is not valid', cannotClaim:'You still have to wait', notYourTurn:'Not your turn', badTake:'Take 3 different gems or 2 of a kind', needFour:'Two of a kind needs 4 or more in the bank', bankShort:'Not enough gems in the bank', cantAfford:'Not enough gems', reserveFull:'You can reserve only 3 cards', roomFull:'Room is full', roomNotFound:'Room not found. Check the code', invalidAction:'That move is not allowed', cardGone:'That card is gone', deckEmpty:'Deck is empty', discardCount:'Return exactly the required number', mustDiscard:'Return tokens first', mustChooseNoble:'Choose a noble first', gameOver:'The game is over', noServer:'Cannot reach the server. Play on one device instead.', nameNeeded:'Enter your name'},
     tut:{btn:'Tutorial (start here)', skip:'Quit', next:'Next', done:'Play on my own', bot:'Computer',
-      notNow:'Only the glowing part can be tapped right now', rigged:'You have been given gems to practise with',
+      notNow:'Only the glowing part can be tapped right now', watching:'The computer is playing…', oppTook:'The computer took {gems}', oppBought:'The computer bought a {color} card', oppReserved:'The computer reserved a card', rigged:'You have been given gems to practise with',
       s:{
         goal:{h:'How you win', p:'First to <b>15 points</b> from cards and nobles wins. <b>You</b> are at the bottom, <b>your opponent</b> at the top. Both of you are on 0.'},
-        rows:{h:'The three middle rows are the market', p:'You buy these cards to score. The bottom row, <b>I</b>, is the cheapest and barely scores. Higher rows cost more and score more. The top one is <b>III</b>.'},
+        rows:{h:'The three middle rows are the market', p:'You buy these cards to score. The bottom row, <b>I</b>, is cheapest and barely scores. Higher rows cost more and score more. The top one is <b>III</b>.<br><b>Why it matters:</b> early on you buy row I cards to build discounts, and those discounts are what get you to row III.'},
         cardPts:{h:'Top left: the points', p:'That is what the card scores when you buy it. Adding these up is how you reach <b>15</b>. Row I cards are mostly 0; row III cards are 3 to 5.'},
-        cardGem:{h:'Top right: a permanent discount', p:'Buying it counts as owning <b>one gem of that colour forever</b>. From then on every card costs you one less of that colour. Stacking these discounts is the heart of the game.'},
+        cardGem:{h:'Top right: a permanent discount', p:'Buying it counts as owning <b>one gem of that colour forever</b>. From then on every card costs one less of that colour.<br><b>Why it matters:</b> this is why cheap cards worth no points are still worth buying. You are buying discount, not points.'},
         cardCost:{h:'Bottom: the price', p:'These are the gems the card costs, by colour. Your discounts come off that price.'},
         bank:{h:'The gem bank', p:'This is where you take gems on your turn. The number is how many are left. <b>Gold</b>, on the right, cannot be taken directly: it only arrives when you reserve a card.'},
-        myPanel:{h:'Reading your own panel', p:'The five squares on the left are <b>the discounts your cards give you</b>. The six circles on the right are <b>the gems you hold</b>. Everything is at zero.'},
-        nobles:{h:'The top row is nobles', p:'Each noble is worth <b>3 points</b>. Their requirement is not gems but <b>how many cards of each colour</b> you own. Four blue and four black, say, and one visits you at the end of your turn. They cannot be bought.'},
-        take3:{h:'Take 3 gems', p:'The most basic thing a turn can do: <b>3 gems of different colours</b>. Tap the glowing white, blue and green, then <b>Take</b> below.', do:'White, blue, green, then Take'},
-        take2:{h:'Take 2 of a kind', p:'You may take 2 of one colour instead, but only when <b>4 or more of it are left in the bank</b>. Red has 4. Tap red <b>twice</b>, then Take.', do:'Tap red twice, then Take'},
+        myPanel:{h:'Reading your own gems', p:'One box per colour. The big number is <b>what you can pay with in that colour</b>. The two small numbers below split it into <b>permanent discounts from cards</b> (square) and <b>gems in hand</b> (circle). Buying spends only the circles; the square never goes down.'},
+        nobles:{h:'The top row is nobles', p:'Each noble is worth <b>3 points</b>. Their requirement is not gems but <b>how many cards of each colour</b> you own.<br><b>Why it matters:</b> that is 3 of your 15 in one go, so look at which nobles are out and steer your cards towards those colours.'},
+        take3:{h:'Take 3 gems', p:'The most basic thing a turn can do: <b>3 gems of different colours</b>.<br><b>Why you play it:</b> it is the most you can get at once, so early on you will do this nearly every turn. Tap the glowing white, blue and green, then <b>Take</b>.', do:'White, blue, green, then Take'},
+        oppTake:{h:'Now the computer plays', p:'Turns alternate. Watch what it takes: the numbers in the top panel change.<br><b>Why watch:</b> the colours your opponent collects tell you which card they are going for.'},
+        take2:{h:'Take 2 of a kind', p:'You may take 2 of one colour instead, but only when <b>4 or more of it are left in the bank</b>. Right now <b>{color}</b> qualifies.<br><b>Why you play it:</b> it helps when one card needs a lot of one colour. You get less than three, but buying a turn sooner is worth it. Tap the glowing gem <b>twice</b>, then Take.', do:'Tap the glowing gem twice, then Take'},
         buyPick:{h:'A card you can afford', p:'The gems you were short of have been topped up. A <b>green outline</b> means you can buy it now. Tap the glowing card.', p2:'The gems you just collected already cover a card. The <b>green outline</b> marks it. Tap the glowing card.', do:'Tap the glowing card'},
         buyDo:{h:'Buy it', p:'Tapping a card shows its price beside what you hold. Press <b>Buy</b>.', do:'Press Buy'},
-        bonus:{h:'Your first discount', p:'The colour of the card you bought has gone to <b>1</b> here. That colour now costs you one gem less. The more cards you own, the cheaper the expensive ones get: that is the snowball.'},
-        reserve:{h:'What reserving means', p:'Tapping a deck takes <b>the top card into your hand without showing anyone</b>. Your opponent has no idea what it is. In exchange you get <b>1 gold</b>. Tap the <b>III</b> deck now.', do:'Tap the III deck'},
-        gold:{h:'Gold stands in for anything', p:'Gold works <b>as any colour</b>. Reserving to collect gold is one way to line up an expensive card. Reserved cards are yours to buy later, and you may hold <b>3</b>.'},
-        limit:{h:'Ten tokens at most', p:'You may hold at most <b>10</b> gem tokens. Go over and you hand the excess back at the end of your turn.'},
+        bonus:{h:'Your first discount', p:'The square in this box has gone to <b>1</b>. The gems you paid went back to the bank, but this discount stays until the end of the game.<br><b>Why it matters:</b> the more discount you hold, the dearer the card the same gems will buy. That snowball is the game.'},
+        oppBuy:{h:'The computer again', p:'Watch one more of its turns: it is building discounts the same way you are.<br><b>Why watch:</b> when you spot a card your opponent can nearly afford, you can buy it first or <b>reserve</b> it so they cannot. That is next.'},
+        reserveCard:{h:'Face-up cards can be reserved too', p:'Reserving <b>puts a card in your hand</b>. You may not be able to pay for it today, but it is yours to buy later and your opponent cannot take it in the meantime.<br><b>When to use it:</b> 1) to take a card your opponent is going for 2) to lock in an expensive card while you gather gems. Tap the glowing card.', do:'Tap the glowing card'},
+        reserveDo:{h:'Reserve it', p:'This time do not buy: press <b>Reserve</b>. The card comes to your hand and you get <b>1 gold</b>.', do:'Press Reserve'},
+        reserveDeck:{h:'Reserving blind from a deck', p:'Tapping a deck reserves too, but then you take <b>the top card without showing anyone</b>. Your opponent has no idea what it is.<br><b>When to use it:</b> when nothing face up suits you but you want the gold, or when you would rather hide your plan. Tap the <b>III</b> deck.', do:'Tap the III deck'},
+        gold:{h:'Gold stands in for anything', p:'Gold works <b>as any colour</b>. You may hold 3 reserved cards, and each reservation hands you a gold.<br><b>Why it matters:</b> when you are one or two gems short of a colour, gold covers the gap and saves you turns.'},
+        limit:{h:'Ten tokens at most', p:'Gems in hand (circles) cannot go past <b>10</b>; the excess goes back at the end of your turn. Discounts (squares) have no limit.<br><b>Why it matters:</b> hoarding gems wastes turns. Turn them into cards as soon as you can.'},
+        plan:{h:'In short: how to play well', p:'1) Early on, take 3 gems and buy <b>cheap row I cards</b> to build discounts.<br>2) Look at the <b>nobles</b> on the table and steer your cards into those colours.<br>3) Once the discounts are there, move up to <b>rows II and III</b>, where the points are.<br>4) <b>Reserve</b> the cards your opponent is chasing.'},
         end:{h:'That is everything', p:'Now play the computer freely. First to <b>15 points</b> wins. The <b>?</b> button at the top brings the rules back any time.'}
       }},
     roomTitle:'Play with a room code', roomHint:'For someone who is not on your friend list.',
@@ -752,7 +816,7 @@ function setLang(l){
   document.querySelectorAll('[data-i18n]').forEach(function(el){ el.textContent = t(el.getAttribute('data-i18n')); });
   $('code').placeholder = t('codePh');
   $('name').placeholder = t('auth.nick');
-  $('pass').placeholder = t('auth.pass');
+  $('authPass').placeholder = t('auth.pass');
   $('friendCode').placeholder = t('friends.codePh');
   if (account) paintHome();
   $('langBtn').textContent = l.toUpperCase();
@@ -780,7 +844,7 @@ var ret = null;           // discard selection
 var ws = null, reconnectTimer = null, backoff = 1000, pendingOpen = null;
 var isArtifact = !!(window.claude && window.claude.use);
 var bot = false;          // local mode against a simple computer player (tutorial)
-var tut = { on: false, step: 0, seq: 0, side: null, cardId: null, boughtColor: null, rigged: false };
+var tut = { on: false, step: 0, seq: 0, side: null, cardId: null, reserveId: null, pairColor: null, boughtColor: null, rigged: false, oppDid: null, oppMoved: false };
 var endPlayed = false, lastRoundShown = false;
 
 function toast(msg, info){
@@ -788,11 +852,111 @@ function toast(msg, info){
   document.body.appendChild(el);
   setTimeout(function(){ el.remove(); }, 2600);
 }
+var screenNow = 'lobby';
 function show(id){
   ['lobby','wait','direct','game'].forEach(function(s){ $(s).classList.toggle('on', s === id); });
   $('actionbar').hidden = id !== 'game';
   window.scrollTo(0, 0);
+  // Entering the table adds a history entry, so the phone's back button lands here
+  // instead of closing the app.
+  if (id === 'game' && screenNow !== 'game') { try { history.pushState({ splendor: 'game' }, ''); } catch (e) {} }
+  screenNow = id;
+  if (id === 'game') fitBoard();
 }
+
+/* ---------------- The phone's back button ---------------- */
+// Back should step out of whatever is open, not close the app.
+var OVERLAYS = ['sheet', 'discard', 'nobleDlg', 'pass', 'over', 'rulesDlg', 'inviteIn', 'inviteOut', 'leaveDlg'];
+function topOverlay(){
+  for (var i = OVERLAYS.length - 1; i >= 0; i--) {
+    var el = $(OVERLAYS[i]);
+    if (el && !el.hidden) return OVERLAYS[i];
+  }
+  return null;
+}
+window.addEventListener('popstate', function(){
+  var open = topOverlay();
+  if (open) {
+    // These must be answered rather than dismissed.
+    if (open === 'discard' || open === 'nobleDlg' || open === 'over') { guardBack(); return; }
+    if (open === 'sheet') closeSheet();
+    else if (open === 'inviteIn') $('inviteDeclineBtn').click();
+    else if (open === 'inviteOut') $('inviteCancelBtn').click();
+    else $(open).hidden = true;
+    guardBack();
+    return;
+  }
+  if (screenNow === 'game') { guardBack(); leaveGame(); return; }
+  if (screenNow === 'direct' || screenNow === 'wait') { guardBack(); goLobby(); return; }
+  // On the lobby, let the platform have the press.
+});
+function guardBack(){ try { history.pushState({ splendor: 'guard' }, ''); } catch (e) {} }
+
+/* ---------------- Fitting the table to the screen ---------------- */
+// Cards are sized from the room left after everything else on the screen, in both
+// directions, so the board never needs scrolling and grows on a larger display.
+var fitPending = false;
+function boardLimit(){
+  var bar = $('actionbar').hidden ? 0 : $('actionbar').getBoundingClientRect().height;
+  return window.innerHeight - bar - 4;
+}
+function boardBottom(landscape){
+  var low = 0;
+  Array.prototype.forEach.call($('game').children, function(c){
+    if (getComputedStyle(c).display === 'none') return;
+    if (landscape && !c.classList.contains('tier') && c.id !== 'nobles') return;
+    low = Math.max(low, c.getBoundingClientRect().bottom);
+  });
+  return low;
+}
+// Size the cards from the room actually left over. Everything that is not a row of
+// cards has a height of its own, so the row height is one subtraction rather than a
+// search. The nobles row scales with the cards, so it is part of the equation.
+var NOBLE_R = 0.88, CARD_R = 92 / 66;
+function measureW(landscape){
+  var game = $('game'), cs = getComputedStyle(game);
+  var rowGap = parseFloat(cs.rowGap) || 6, colGap = parseFloat(cs.columnGap) || 6;
+  var box = game.getBoundingClientRect();
+  var fixed = 0;
+  Array.prototype.forEach.call(game.children, function(c){
+    if (c.classList.contains('tier') || c.id === 'nobles') return;
+    if (getComputedStyle(c).display === 'none') return;
+    // In the landscape layout the players sit in their own column and share rows
+    // with the market, so they take no height away from it.
+    if (landscape && !c.classList.contains('topbar')) return;
+    fixed += c.getBoundingClientRect().height + rowGap;
+  });
+  var avail = boardLimit() - box.top - fixed - 3 * rowGap;
+  var byWidth = ((landscape ? box.width * 0.62 : box.width) - 4 * colGap) / 5;
+  return Math.max(30, Math.min(byWidth, avail / (NOBLE_R + 3 * CARD_R), 170));
+}
+function fitBoard(){
+  if (!$('game').classList.contains('on')) return;
+  if (fitPending) return;
+  fitPending = true;
+  requestAnimationFrame(function(){
+    fitPending = false;
+    var root = document.documentElement;
+    var landscape = window.matchMedia('(orientation:landscape) and (min-width:700px)').matches;
+    // Always judge from the full layout. Deciding from the compacted one instead
+    // makes the two states chase each other and the board twitches.
+    document.body.classList.remove('tight');
+    var w = measureW(landscape);
+    if (w < 56) {
+      document.body.classList.add('tight');
+      w = measureW(landscape);
+    }
+    var now = parseFloat(root.style.getPropertyValue('--card-w')) || 0;
+    if (Math.abs(now - w) > 1.5) root.style.setProperty('--card-w', w.toFixed(1) + 'px');
+    var over = boardBottom(landscape) - boardLimit();
+    if (over > 1) {
+      w = Math.max(30, w - over / (NOBLE_R + 3 * CARD_R) - 0.5);
+      root.style.setProperty('--card-w', w.toFixed(1) + 'px');
+    }
+  });
+}
+window.addEventListener('resize', fitBoard);
+window.addEventListener('orientationchange', fitBoard);
 // A blocked object must still receive the tap, or it cannot push back.
 function block(el, on){
   if (on) { el.setAttribute('aria-disabled', 'true'); el.classList.add('blocked'); }
@@ -846,14 +1010,33 @@ function playerEl(p, idx, isMe){
   box.appendChild(name);
   var score = el('div', 'score num foil-text', String(p.points)); score.appendChild(el('small', null, t('pts')));
   box.appendChild(score);
-  var hold = el('div', 'holdings');
+  // Each colour in one place: the number you can actually spend, and underneath it
+  // how much of that is permanent (cards) and how much is loose gems.
+  var wallet = el('div', 'wallet');
   var b = S.bonuses(p);
-  S.COLORS.forEach(function(c){ var s = el('span', 'bonus num'); s.setAttribute('data-fx', 'pbonus:' + idx + ':' + c); var i = el('i', 'tok ' + c); i.style.borderRadius = '3px'; s.appendChild(i); s.appendChild(document.createTextNode(String(b[c]))); hold.appendChild(s); });
-  hold.appendChild(el('span', 'sep'));
-  S.COLORS.concat(['y']).forEach(function(c){ var tk = tokEl(c, p.tokens[c]); tk.setAttribute('data-fx', 'ptok:' + idx + ':' + c); hold.appendChild(tk); });
+  S.COLORS.concat(['y']).forEach(function(c){
+    var gold = c === 'y';
+    var cards = gold ? 0 : b[c], toks = p.tokens[c], total = cards + toks;
+    var cell = el('div', 'cell' + (total ? '' : ' none'));
+    var tot = el('span', 'tot tok ' + c, String(total));
+    tot.setAttribute('data-fx', 'ptot:' + idx + ':' + c);
+    cell.appendChild(tot);
+    var split = el('span', 'split');
+    if (!gold) {
+      var ci = el('i', 'c', String(cards));
+      ci.setAttribute('data-fx', 'pbonus:' + idx + ':' + c);
+      split.appendChild(ci);
+    }
+    var ti = el('i', 't', String(toks));
+    ti.setAttribute('data-fx', 'ptok:' + idx + ':' + c);
+    split.appendChild(ti);
+    cell.appendChild(split);
+    wallet.appendChild(cell);
+  });
+  box.appendChild(wallet);
+  var hold = el('div', 'holdings');
   var mn = el('span', 'mini-nobles'); mn.setAttribute('data-fx', 'pnoble:' + idx);
-  if (p.nobles.length) { hold.appendChild(el('span', 'sep')); p.nobles.forEach(function(){ mn.appendChild(el('i')); }); hold.appendChild(mn); }
-  box.appendChild(hold);
+  if (p.nobles.length) { p.nobles.forEach(function(){ mn.appendChild(el('i')); }); hold.appendChild(mn); box.appendChild(hold); }
   if (p.reserved.length) {
     var rs = el('div', 'reserved-strip');
     rs.setAttribute('data-fx', 'pres:' + idx);
@@ -966,6 +1149,7 @@ function render(){
   $('over').hidden = view.phase !== 'over';
   if (view.phase === 'over') renderOver();
   if (tut.on) renderTut();
+  fitBoard();
 }
 function logText(e){
   var name = view.players[e.seat].name;
@@ -1100,7 +1284,9 @@ function playMoves(entries, before, prev){
         });
         Object.keys(held).forEach(function(c){
           var last = e.colors.lastIndexOf(c);
-          holdCount('ptok:' + e.seat + ':' + c, held[c], clock + last * 80 + 320);
+          var at = clock + last * 80 + 320;
+          holdCount('ptok:' + e.seat + ':' + c, held[c], at);
+          if (prev) holdCount('ptot:' + e.seat + ':' + c, S.bonuses(prev.players[e.seat])[c] + held[c], at);
         });
         clock += 320 + (e.colors.length - 1) * 80;
         break;
@@ -1381,7 +1567,7 @@ function act(action){
         $('pass').hidden = false;
       });
       if (tutScripted() && localState.current === 1 && localState.phase === 'action') {
-        localState.current = 0;           // the computer holds off while the lesson runs
+        localState.current = 0;           // the computer waits while a lesson is being driven
         view = S.viewFor(localState, 0);
         render();
       } else if (bot && localState.current === 1 && localState.phase !== 'over') {
@@ -1397,19 +1583,22 @@ function act(action){
 }
 function saveLocal(){
   try {
-    if (mode === 'local' && localState && localState.phase !== 'over') localStorage.setItem('splendor.local', JSON.stringify({ state: localState, bot: bot, seat: seat }));
+    if (mode === 'local' && localState && localState.phase !== 'over')
+      localStorage.setItem('splendor.local', JSON.stringify({ state: localState, bot: bot, seat: seat, at: Date.now(), tut: tut.on }));
     else localStorage.removeItem('splendor.local');
   } catch(e){}
 }
 function loadLocal(){ try { return JSON.parse(localStorage.getItem('splendor.local') || 'null'); } catch(e){ return null; } }
 function refreshResume(){ var sv = loadLocal(); $('resumeBtn').hidden = !(sv && sv.state && sv.state.phase !== 'over'); }
-$('resumeBtn').onclick = function(){
-  var sv = loadLocal(); if (!sv) return;
+function resumeLocal(sv){
+  if (!sv) return false;
   mode = 'local'; bot = !!sv.bot; localState = sv.state; seat = bot ? 0 : localState.current;
   view = null; sel = []; ret = null; meta = { code: null, players: [], rematch: [] };
   show('game'); applyView(S.viewFor(localState, seat));
   if (bot && localState.current === 1) setTimeout(botTurn, botPause());
-};
+  return true;
+}
+$('resumeBtn').onclick = function(){ resumeLocal(loadLocal()); };
 $('passBtn').onclick = function(){ $('pass').hidden = true; };
 
 /* ---------------- Local mode ---------------- */
@@ -1497,34 +1686,75 @@ var TUT = [
   { id: 'cardGem',  at: function(){ return document.querySelector('#tier3 .card .gem'); }, pad: 10 },
   { id: 'cardCost', at: function(){ return document.querySelector('#tier3 .card .cost'); }, pad: 6 },
   { id: 'bank',     at: function(){ return $('bank'); } },
-  { id: 'myPanel',  at: function(){ return document.querySelector('#me .holdings'); } },
+  { id: 'myPanel',  at: function(){ return document.querySelector('#me .wallet'); } },
   { id: 'nobles',   at: function(){ return $('nobles'); } },
   { id: 'take3',    at: function(){ return $('bank'); },
                     allow: ['#bank .bankt.w', '#bank .bankt.u', '#bank .bankt.g', '#takeBtn', '#clearBtn'],
                     done: function(e){ return e.type === 'take' && e.colors.length === 3; } },
-  { id: 'take2',    at: function(){ return document.querySelector('#bank .bankt.r'); },
-                    allow: ['#bank .bankt.r', '#takeBtn', '#clearBtn'],
+  { id: 'oppTake',  at: function(){ return $('opp'); }, watch: true },
+  { id: 'take2',    before: pickPairColour, skipIf: function(){ return !tut.pairColor; },
+                    at: function(){ return document.querySelector('#bank .bankt.' + tut.pairColor); },
+                    allow: [function(){ return document.querySelector('#bank .bankt.' + tut.pairColor); }, '#takeBtn', '#clearBtn'],
                     done: function(e){ return e.type === 'take' && e.colors.length === 2; } },
-  { id: 'buyPick',  before: rigAffordable,
-                    at: tutCardEl, allow: [tutCardEl],
+  { id: 'buyPick',  before: rigAffordable, at: tutCardEl, allow: [tutCardEl],
                     ready: function(){ return !$('sheet').hidden; } },
   { id: 'buyDo',    at: function(){ return $('buyBtn'); }, allow: ['#buyBtn'],
                     done: function(e){ return e.type === 'buy'; } },
   { id: 'bonus',    at: function(){
-                      var c = tut.boughtColor || 'w';
-                      return document.querySelector('[data-fx="pbonus:0:' + c + '"]');
+                      return document.querySelector('[data-fx="ptot:0:' + (tut.boughtColor || 'w') + '"]');
                     }, pad: 8 },
-  { id: 'reserve',  at: function(){ return document.querySelector('#tier3 .deck'); },
+  { id: 'oppBuy',   at: function(){ return $('opp'); }, watch: true },
+  { id: 'reserveCard', before: pickReserveTarget, at: tutReserveEl, allow: [tutReserveEl],
+                    ready: function(){ return !$('sheet').hidden; } },
+  { id: 'reserveDo', at: function(){ return $('reserveBtn'); }, allow: ['#reserveBtn'],
+                    done: function(e){ return e.type === 'reserve' && !e.hidden; } },
+  { id: 'reserveDeck', at: function(){ return document.querySelector('#tier3 .deck'); },
                     allow: ['#tier3 .deck'],
-                    done: function(e){ return e.type === 'reserve'; } },
-  { id: 'gold',     at: function(){ return document.querySelector('[data-fx="ptok:0:y"]'); }, pad: 10 },
-  { id: 'limit',    at: function(){ return document.querySelector('#me .holdings'); } },
+                    done: function(e){ return e.type === 'reserve' && e.hidden; } },
+  { id: 'gold',     at: function(){ return document.querySelector('[data-fx="ptot:0:y"]'); }, pad: 10 },
+  { id: 'limit',    at: function(){ return document.querySelector('#me .wallet'); } },
+  { id: 'plan',     at: function(){ return $('tier1'); } },
   { id: 'end',      at: null }
 ];
 
 function tutStep(){ return TUT[tut.step] || null; }
-function tutScripted(){ return tut.on && tut.step < TUT.length - 1; }
+// The computer holds off during the lessons the learner drives, and plays on the
+// steps that exist to be watched.
+function tutScripted(){
+  if (!tut.on || tut.step >= TUT.length - 1) return false;
+  var st = tutStep();
+  return !(st && st.watch);
+}
 function tutCardEl(){ return tut.cardId ? document.querySelector('[data-fx="card:' + tut.cardId + '"]') : null; }
+function tutReserveEl(){ return tut.reserveId ? document.querySelector('[data-fx="card:' + tut.reserveId + '"]') : null; }
+
+// Two of a kind needs four in the bank, and the computer may have taken the colour
+// this lesson used to assume. Find one that still qualifies.
+function pickPairColour(){
+  tut.pairColor = null;
+  if (!localState) return;
+  var best = null;
+  S.COLORS.forEach(function(c){
+    if (localState.bank[c] < 4) return;
+    if (best === null || localState.bank[c] > localState.bank[best]) best = c;
+  });
+  tut.pairColor = best;
+}
+
+// A card worth denying: the dearest one on the board that the learner cannot buy yet.
+function pickReserveTarget(){
+  if (!localState) return;
+  var p = localState.players[0], best = null;
+  [3, 2, 1].forEach(function(tier){
+    localState.board[tier].forEach(function(id){
+      if (!id || best) return;
+      var card = S.CARD_BY_ID[id];
+      if (S.canAfford(p, card)) return;
+      best = id;
+    });
+  });
+  tut.reserveId = best || (localState.board[3][0] || localState.board[2][0] || localState.board[1][0]);
+}
 
 // Top the player up so one board card is genuinely affordable, taking the gems
 // out of the bank so nothing is conjured from nowhere.
@@ -1554,7 +1784,7 @@ function rigAffordable(){
 }
 
 function startTut(){
-  tut = { on: true, step: 0, seq: 0, side: null, cardId: null, boughtColor: null, rigged: false };
+  tut = { on: true, step: 0, seq: 0, side: null, cardId: null, reserveId: null, pairColor: null, boughtColor: null, rigged: false, oppDid: null, oppMoved: false };
   document.body.classList.add('tut-on');
   $('coach').hidden = false;
   afterFx(function(){ enterStep(0); });
@@ -1563,8 +1793,20 @@ function enterStep(i){
   tut.step = i;
   tut.seq = view ? (view.seq || 0) : 0;
   tut.side = null;
+  tut.oppMoved = false;
   var st = tutStep();
   if (st && st.before) st.before();
+  if (st && st.skipIf && st.skipIf()) return enterStep(i + 1);
+  // The lesson decides whose turn it is: yours to act, the computer's to be watched.
+  if (st && localState && localState.phase === 'action') {
+    var want = st.watch ? 1 : 0;
+    if (localState.current !== want) {
+      localState.current = want;
+      view = S.viewFor(localState, 0);
+      render();
+    }
+    if (st.watch) setTimeout(function(){ if (tut.on && tut.step === i) botTurn(); }, 700);
+  }
   paintCoach(true);
   requestAnimationFrame(function(){ if (tut.on && tut.step === i) paintCoach(false); });
 }
@@ -1585,6 +1827,14 @@ $('coachNext').onclick = function(){
 function renderTut(){
   if (!tut.on) return;
   var st = tutStep();
+  if (st && st.watch && !tut.oppMoved) {
+    var theirs = (view.log || []).filter(function(e){ return (e.seq || 0) > tut.seq && e.seat === 1; });
+    if (theirs.length) {
+      tut.oppDid = theirs[theirs.length - 1];
+      // Let the move land, then wait to be read rather than rushing on.
+      return afterFx(function(){ if (tut.on) { tut.oppMoved = true; paintCoach(true); } });
+    }
+  }
   if (st && st.done) {
     var fresh = (view.log || []).filter(function(e){ return (e.seq || 0) > tut.seq && e.seat === 0; });
     for (var i = 0; i < fresh.length; i++) {
@@ -1642,6 +1892,18 @@ document.addEventListener('click', function(ev){
 }, true);
 
 /* ---- drawing the spotlight and the arrow ---- */
+// Name what the computer just did, so the step has something concrete to point at.
+function oppMoveLine(){
+  var e = tut.oppDid;
+  if (!e) return '';
+  if (e.type === 'take') return t('tut.oppTook', { gems: e.colors.map(function(c){ return t('colors.' + c); }).join(', ') });
+  if (e.type === 'buy') return t('tut.oppBought', { color: t('colors.' + S.CARD_BY_ID[e.cardId].color) });
+  if (e.type === 'reserve') return t('tut.oppReserved');
+  return '';
+}
+function coachFill(str){
+  return String(str).replace(/\{color\}/g, tut.pairColor ? t('colors.' + tut.pairColor) : '');
+}
 function coachRect(el){
   if (!el || !el.getBoundingClientRect) return null;
   var r = el.getBoundingClientRect();
@@ -1654,11 +1916,15 @@ function paintCoach(settled){
   var st = tutStep(); if (!st) return;
   var txt = I18N[lang].tut.s[st.id] || I18N.en.tut.s[st.id] || { h: '', p: '' };
   $('coachTitle').textContent = txt.h;
-  $('coachText').innerHTML = (st.id === 'buyPick' && !tut.rigged && txt.p2) ? txt.p2 : txt.p;
+  var body = (st.id === 'buyPick' && !tut.rigged && txt.p2) ? txt.p2 : txt.p;
+  $('coachText').innerHTML = coachFill(body);
   $('coachStep').textContent = (tut.step + 1) + ' / ' + TUT.length;
   var acting = !!st.allow;
-  $('coachDo').textContent = acting ? (txt.do || '') : '';
-  $('coachNext').hidden = acting;
+  var waitingOnThem = !!st.watch && !tut.oppMoved;
+  $('coachDo').textContent = acting ? coachFill(txt.do || '')
+    : waitingOnThem ? t('tut.watching')
+    : (st.watch ? coachFill(oppMoveLine()) : '');
+  $('coachNext').hidden = acting || waitingOnThem;
   $('coachNext').textContent = tut.step === TUT.length - 1 ? t('tut.done') : t('tut.next');
   applyLock();
 
@@ -1682,15 +1948,24 @@ function paintCoach(settled){
 
   var cr = card.getBoundingClientRect();
   if (!settled) {
-    var bandTop = below ? 10 : cr.bottom + 18;
-    var bandBot = below ? cr.top - 18 : H - 10;
-    var shift = 0;
-    if (r.top < bandTop) shift = r.top - bandTop - 8;
-    else if (r.bottom > bandBot) shift = r.bottom - bandBot + 8;
-    if (Math.abs(shift) > 4) {
-      try { window.scrollBy({ top: shift, behavior: FX && FX.reduced() ? 'auto' : 'smooth' }); }
-      catch (e) { window.scrollBy(0, shift); }
+    var covered = r.bottom > cr.top - 8 && r.top < cr.bottom + 8;
+    if (covered) {
+      // The card is sitting on what it is explaining: put it on the other side.
+      tut.side = below ? 'top' : 'bottom';
       return requestAnimationFrame(function(){ paintCoach(true); });
+    }
+    var room = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+    if (room > 4) {
+      var bandTop = below ? 10 : cr.bottom + 18;
+      var bandBot = below ? cr.top - 18 : H - 10;
+      var shift = 0;
+      if (r.top < bandTop) shift = r.top - bandTop - 8;
+      else if (r.bottom > bandBot) shift = r.bottom - bandBot + 8;
+      if (Math.abs(shift) > 4) {
+        try { window.scrollBy({ top: shift, behavior: FX && FX.reduced() ? 'auto' : 'smooth' }); }
+        catch (e) { window.scrollBy(0, shift); }
+        return requestAnimationFrame(function(){ paintCoach(true); });
+      }
     }
   }
 
@@ -1729,7 +2004,7 @@ function paintCoach(settled){
       '<rect width="' + W + '" height="' + H + '" fill="#fff"/>' +
       holes.map(holeRect).join('') +
     '</mask></defs>' +
-    '<rect width="' + W + '" height="' + H + '" fill="rgba(8,6,12,.74)" mask="url(#coachMask)"/>' +
+    '<rect width="' + W + '" height="' + H + '" fill="rgba(8,6,12,.45)" mask="url(#coachMask)"/>' +
     holes.map(ringRect).join('') +
     '<path d="' + path + '" fill="none" stroke="#f0cf7a" stroke-width="2.5" stroke-linecap="round" opacity=".95"/>' +
     '<polygon points="' + head + '" fill="#f0cf7a"/>';
@@ -1863,13 +2138,13 @@ function onMessage(m){
 
 /* ---- signing in and out ---- */
 $('loginBtn').onclick = function(){
-  var n = $('name').value.trim(), pw = $('pass').value;
+  var n = $('name').value.trim(), pw = $('authPass').value;
   if (!n) { toast(t('err.nameNeeded')); $('name').focus(); return; }
-  if (pw.length < 4) { toast(t('err.passShort')); $('pass').focus(); return; }
+  if (pw.length < 4) { toast(t('err.passShort')); $('authPass').focus(); return; }
   try { localStorage.setItem('splendor.name', n); } catch(e){}
   connect(function(){ ws.send(JSON.stringify({ t: 'login', name: n, pass: pw })); });
 };
-$('pass').addEventListener('keydown', function(e){ if (e.key === 'Enter') $('loginBtn').click(); });
+$('authPass').addEventListener('keydown', function(e){ if (e.key === 'Enter') $('loginBtn').click(); });
 
 function signOut(silent){
   if (ws && ws.readyState === 1 && !silent) ws.send(JSON.stringify({ t: 'logout' }));
@@ -1886,7 +2161,8 @@ $('logoutBtn').onclick = function(){ signOut(false); };
 /* ---- home ---- */
 function paintHome(){
   var inAcc = !!account;
-  $('authPanel').hidden = inAcc;
+  if (inAcc) hasServer = true;
+  $('authPanel').hidden = inAcc || !hasServer;
   $('homePanel').hidden = !inAcc;
   if (inAcc) {
     $('homeName').textContent = account.name;
@@ -2245,6 +2521,15 @@ account = loadJSON('splendor.account', null);
 var params = new URLSearchParams(location.search);
 refreshResume();
 paintHome();
+try { history.replaceState({ splendor: 'lobby' }, ''); } catch (e) {}
+// A game that was not finished is rejoined without being asked.
+(function(){
+  var sv = loadLocal();
+  if (!sv || !sv.state || sv.state.phase === 'over') return;
+  if (sv.at && Date.now() - sv.at > 24 * 60 * 60 * 1000) return;  // yesterday's game stays a choice
+  if (sv.tut) return;                                             // a half-finished lesson is not a game
+  resumeLocal(sv);
+})();
 
 // Accounts, friends and rooms all need the server behind this page. On a static
 // host there is none, so ask once and only offer what actually works.
@@ -2262,15 +2547,15 @@ function probeServer(){
   } catch (e) { settled = true; clearTimeout(to); offerServerFeatures(false); }
 }
 function offerServerFeatures(ok){
-  hasServer = ok;
-  $('authPanel').hidden = !ok || !!account;
-  $('homePanel').hidden = !ok || !account;
+  hasServer = ok || hasServer || !!account;
   // With no account to take a name from, the offline modes still need somewhere to type one.
-  if (!ok) {
+  if (!hasServer) {
     $('nameLabel').hidden = false;
     $('name').placeholder = t('yourName');
     $('localPanel').insertBefore($('name'), $('resumeBtn'));
   }
+  paintHome();
+  ok = hasServer;
   // Without a server, swapping invite codes by hand is the only way to reach a friend.
   $('directPanel').hidden = false;
   if (!ok) return;
