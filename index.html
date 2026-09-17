@@ -324,8 +324,8 @@ h1,h2,h3{font-family:var(--display);font-weight:700;margin:0;text-wrap:balance;l
 .coach-ring{animation:coachRing 1.6s ease-in-out infinite}
 @media (prefers-reduced-motion:reduce){.coach-ring{animation:none}}
 body.tut-on{overscroll-behavior:contain}
-body.coach-bottom #game{padding-bottom:270px}
-body.coach-top #game{padding-top:250px}
+body.tut-on #game{padding-top:250px;padding-bottom:280px}
+/* Placement classes on <body>; kept distinct from .coach-top inside the card. */
 body.tut-on .actionbar{z-index:23}
 @media (min-width:520px){:root{--gutter:20px}#game{max-width:520px;margin-inline:auto;width:100%}.actionbar{max-width:520px;margin-inline:auto}}
 </style>
@@ -1565,12 +1565,12 @@ function enterStep(i){
   tut.side = null;
   var st = tutStep();
   if (st && st.before) st.before();
-  paintCoach(false);
-  setTimeout(function(){ if (tut.on && tut.step === i) paintCoach(false); }, 260);
+  paintCoach(true);
+  requestAnimationFrame(function(){ if (tut.on && tut.step === i) paintCoach(false); });
 }
 function endTut(){
   tut.on = false;
-  document.body.classList.remove('tut-on', 'coach-top', 'coach-bottom');
+  document.body.classList.remove('tut-on', 'coach-at-top', 'coach-at-bottom');
   $('coach').hidden = true;
   clearLock();
   if ($('actionbar')) $('actionbar').style.bottom = '';
@@ -1671,8 +1671,8 @@ function paintCoach(settled){
   // The side is decided once per step, so the card never flips back and forth.
   if (r && tut.side == null) tut.side = ((r.top + r.height / 2) < H * 0.52) ? 'bottom' : 'top';
   var below = tut.side !== 'top';
-  document.body.classList.toggle('coach-bottom', below);
-  document.body.classList.toggle('coach-top', !below);
+  document.body.classList.toggle('coach-at-bottom', below);
+  document.body.classList.toggle('coach-at-top', !below);
   card.style.top = below ? '' : 'calc(12px + env(safe-area-inset-top,0px))';
   card.style.bottom = below ? 'calc(12px + env(safe-area-inset-bottom,0px))' : '';
 
@@ -1688,13 +1688,22 @@ function paintCoach(settled){
     if (r.top < bandTop) shift = r.top - bandTop - 8;
     else if (r.bottom > bandBot) shift = r.bottom - bandBot + 8;
     if (Math.abs(shift) > 4) {
-      window.scrollBy(0, shift);
+      try { window.scrollBy({ top: shift, behavior: FX && FX.reduced() ? 'auto' : 'smooth' }); }
+      catch (e) { window.scrollBy(0, shift); }
       return requestAnimationFrame(function(){ paintCoach(true); });
     }
   }
 
   var pad = st.pad == null ? 6 : st.pad;
   var x = r.left - pad, y = r.top - pad, w = r.width + pad * 2, h = r.height + pad * 2;
+  var holes = [{ x: x, y: y, w: w, h: h, main: true }];
+  (allowedEls() || []).forEach(function(a){
+    var ar = coachRect(a);
+    if (!ar) return;
+    // Skip anything already inside the main hole.
+    if (ar.left >= x && ar.top >= y && ar.right <= x + w && ar.bottom <= y + h) return;
+    holes.push({ x: ar.left - 5, y: ar.top - 5, w: ar.width + 10, h: ar.height + 10, main: false });
+  });
   var from = { x: W / 2, y: below ? cr.top - 6 : cr.bottom + 6 };
   var to = { x: x + w / 2, y: below ? y + h + 10 : y - 10 };
   var midY = (from.y + to.y) / 2;
@@ -1707,14 +1716,21 @@ function paintCoach(settled){
     [to.x - 11 * Math.cos(ang + 0.42), to.y - 11 * Math.sin(ang + 0.42)]
   ].map(function(q){ return q[0].toFixed(1) + ',' + q[1].toFixed(1); }).join(' ');
 
+  function holeRect(o){
+    return '<rect x="' + o.x + '" y="' + o.y + '" width="' + o.w + '" height="' + o.h + '" rx="10" fill="#000"/>';
+  }
+  function ringRect(o){
+    return '<rect class="coach-ring" x="' + o.x + '" y="' + o.y + '" width="' + o.w + '" height="' + o.h +
+      '" rx="10" fill="none" stroke="#f0cf7a" stroke-width="' + (o.main ? 2.5 : 2) + '"' +
+      (o.main ? '' : ' stroke-dasharray="7 5"') + '/>';
+  }
   svg.innerHTML =
     '<defs><mask id="coachMask">' +
       '<rect width="' + W + '" height="' + H + '" fill="#fff"/>' +
-      '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="10" fill="#000"/>' +
+      holes.map(holeRect).join('') +
     '</mask></defs>' +
     '<rect width="' + W + '" height="' + H + '" fill="rgba(8,6,12,.74)" mask="url(#coachMask)"/>' +
-    '<rect class="coach-ring" x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="10" ' +
-      'fill="none" stroke="#f0cf7a" stroke-width="2.5"/>' +
+    holes.map(ringRect).join('') +
     '<path d="' + path + '" fill="none" stroke="#f0cf7a" stroke-width="2.5" stroke-linecap="round" opacity=".95"/>' +
     '<polygon points="' + head + '" fill="#f0cf7a"/>';
 }
