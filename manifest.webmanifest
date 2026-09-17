@@ -1,0 +1,9 @@
+{
+  "name": "Splendor Duel Table",
+  "short_name": "Splendor",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#16131a",
+  "theme_color": "#16131a",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}

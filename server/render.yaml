@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: splendor
+    runtime: node
+    plan: free
+    rootDir: server
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health

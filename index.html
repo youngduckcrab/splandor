@@ -1,0 +1,1639 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#16131a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<title>Splendor Duel Table</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Cormorant+Garamond:ital,wght@0,500;1,500&family=Noto+Sans+KR:wght@400;500;700&display=swap">
+<style>
+:root{
+  --ground:#120f16; --ground-2:#1c1723; --surface:#221c2b; --surface-2:#1b1622; --raised:#2c2536; --line:rgba(214,168,78,.22); --line-soft:rgba(214,168,78,.12); --hair:rgba(255,255,255,.05);
+  --ink:#efe7d5; --ink-2:#b9ae99; --ink-3:#7f7566;
+  --gold:#d6a84e; --gold-2:#f0cf7a; --gold-3:#a67f1f; --gold-ink:#2a1d05;
+  --ok:#5fbf7a; --warn:#e0a640; --bad:#e2605c;
+  --display:"Cinzel",Georgia,"Times New Roman",serif;
+  --serif:"Cormorant Garamond","Noto Sans KR",Georgia,serif;
+  --body:"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --gutter:14px;
+  --foil:linear-gradient(135deg,#f7e2a0 0%,#c9962f 35%,#f3d98a 55%,#a67f1f 80%,#e9c870 100%);
+  color-scheme:dark;
+}
+.w{--cl:#ffffff;--cb:#e4e8ee;--cd:#8f9cac;--ct:#1b1b1b}
+.u{--cl:#a9c4ff;--cb:#3d6fd8;--cd:#12306f;--ct:#fff}
+.g{--cl:#9defbf;--cb:#2c9c5c;--cd:#0d4526;--ct:#fff}
+.r{--cl:#ffa3a3;--cb:#cf3a3a;--cd:#5c0f12;--ct:#fff}
+.k{--cl:#9a9aae;--cb:#3b3b47;--cd:#0b0b0f;--ct:#fff}
+.y{--cl:#fff3c4;--cb:#e3b640;--cd:#8a6210;--ct:#2a1d05}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{margin:0;color:var(--ink);font-family:var(--body);font-size:14px;line-height:1.4;padding-inline:var(--gutter);padding-block:0;overflow-x:hidden;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'%3E%3Cpath d='M14 2l3 12-3 12-3-12z' fill='%23d6a84e' fill-opacity='.045'/%3E%3Ccircle cx='0' cy='14' r='.9' fill='%23d6a84e' fill-opacity='.08'/%3E%3Ccircle cx='28' cy='14' r='.9' fill='%23d6a84e' fill-opacity='.08'/%3E%3C/svg%3E"),
+    radial-gradient(120% 60% at 50% -10%,#2a2233 0%,rgba(42,34,51,0) 70%),
+    var(--ground);
+  background-attachment:scroll}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;touch-action:manipulation}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--gold-2);outline-offset:2px}
+input{font:inherit;color:var(--ink);background:var(--ground);border:1px solid var(--line);border-radius:8px;padding:11px 12px;width:100%;box-shadow:inset 0 1px 3px rgba(0,0,0,.5)}
+input::placeholder{color:var(--ink-3)}
+h1,h2,h3{font-family:var(--display);font-weight:700;margin:0;text-wrap:balance;letter-spacing:.02em}
+.num{font-variant-numeric:tabular-nums}
+.screen{display:none;min-height:100%;flex-direction:column}
+.screen.on{display:flex}
+[hidden]{display:none!important}
+.foil-text{background:var(--foil);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+/* ---------- Gem chips: tokens, cost dots, bonus squares ---------- */
+.tok,.cost i,.bankt .big,.bonus i,.card .gem,.noble .req i{
+  background:radial-gradient(circle at 36% 28%,var(--cl) 0%,var(--cb) 46%,var(--cd) 100%);color:var(--ct);
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.45),0 0 0 1px rgba(214,168,78,.55),0 1px 2px rgba(0,0,0,.6);border:0;
+  text-shadow:0 1px 1px rgba(0,0,0,.35)}
+.w.tok,.cost i.w,.bankt.w .big,.bonus i.w,.card .gem.w,.noble .req i.w{text-shadow:none}
+.tok{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;font-size:11px;font-weight:700}
+.tok.zero{opacity:.28;box-shadow:inset 0 0 0 1px rgba(0,0,0,.45),0 0 0 1px rgba(214,168,78,.2)}
+
+/* ---------- Panels, buttons ---------- */
+.panel{background:linear-gradient(180deg,var(--surface),var(--surface-2));border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px;
+  box-shadow:inset 0 1px 0 var(--hair),0 8px 24px rgba(0,0,0,.35)}
+.panel h2{font-size:12px;color:var(--gold);letter-spacing:.16em;text-transform:uppercase;font-family:var(--body);font-weight:500}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:10px;font-weight:500;
+  background:linear-gradient(180deg,#332b3e,#251f2e);border:1px solid var(--line);color:var(--ink);box-shadow:inset 0 1px 0 var(--hair),0 2px 6px rgba(0,0,0,.35)}
+.btn.primary{background:linear-gradient(180deg,#f6dd98 0%,#d6a84e 55%,#b98a2f 100%);color:var(--gold-ink);border-color:#8a6210;font-weight:700;letter-spacing:.02em;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.55),inset 0 -1px 0 rgba(0,0,0,.25),0 3px 10px rgba(0,0,0,.45)}
+.btn.ghost{background:transparent;box-shadow:none;border-color:var(--line-soft);color:var(--ink-2)}
+.btn:disabled{opacity:.4;cursor:default}
+.row{display:flex;gap:8px;align-items:center}
+.row>input{flex:1;min-width:0}
+.lang{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.lang button{padding:6px 14px;border-radius:999px;border:1px solid var(--line-soft);color:var(--ink-2);font-size:13px}
+.lang button.on{border-color:var(--gold);color:var(--gold-2);background:rgba(214,168,78,.08)}
+.note{color:var(--ink-3);font-size:12px;margin:0}
+.rule{display:flex;align-items:center;gap:10px;color:var(--gold);opacity:.7;font-size:10px}
+.rule::before,.rule::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+
+/* ---------- Lobby ---------- */
+#lobby{justify-content:center;gap:20px;padding-block:28px;max-width:420px;margin-inline:auto;width:100%}
+.brand{text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px}
+.brand .emblem{width:96px;height:96px;filter:drop-shadow(0 6px 14px rgba(0,0,0,.6))}
+.brand h1{font-size:36px;letter-spacing:.18em;padding-left:.18em;line-height:1.1}
+.brand p{margin:0;color:var(--ink-2);font-family:var(--serif);font-size:16px;font-style:italic}
+.brand .gems{display:flex;justify-content:center;gap:10px;margin-top:8px}
+.brand .gems .tok{width:18px;height:18px}
+
+/* ---------- Waiting / direct ---------- */
+#wait{justify-content:center;align-items:center;gap:18px;text-align:center;padding-block:32px}
+.code{font-family:var(--display);font-size:44px;letter-spacing:.3em;padding-left:.3em}
+.pulse{width:10px;height:10px;border-radius:50%;background:var(--gold);display:inline-block;animation:pulse 1.4s infinite}
+@keyframes pulse{0%,100%{opacity:.3}50%{opacity:1}}
+@media (prefers-reduced-motion:reduce){.pulse{animation:none}}
+#direct{max-width:420px;margin-inline:auto;width:100%;padding-block:12px}
+.codebox{width:100%;font:12px/1.4 ui-monospace,Menlo,Consolas,monospace;color:var(--ink-2);background:var(--ground);border:1px solid var(--line);border-radius:8px;padding:8px;resize:vertical;word-break:break-all;box-shadow:inset 0 1px 3px rgba(0,0,0,.5)}
+.reconnect{display:inline-flex;margin-top:6px}
+
+/* ---------- Game ---------- */
+#game{gap:8px;padding-block:6px 76px;position:relative}
+/* The table the cards rest on: a felt weave under a soft pool of light. */
+#game::before{content:"";position:fixed;inset:-10% -20% -10% -20%;z-index:-1;pointer-events:none;
+  background:
+    radial-gradient(70% 45% at 50% 30%,rgba(92,72,110,.30),rgba(92,72,110,0) 70%),
+    repeating-linear-gradient(46deg,rgba(255,255,255,.012) 0 2px,rgba(0,0,0,.02) 2px 4px),
+    repeating-linear-gradient(-46deg,rgba(255,255,255,.012) 0 2px,rgba(0,0,0,.02) 2px 4px),
+    radial-gradient(120% 80% at 50% 45%,#241d2c 0%,#171320 55%,#100d16 100%)}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:32px}
+.topbar .status{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-2);min-width:0;font-family:var(--display);letter-spacing:.12em}
+.topbar .tools{display:flex;gap:6px}
+.iconbtn{width:32px;height:32px;border-radius:8px;border:1px solid var(--line-soft);display:inline-flex;align-items:center;justify-content:center;color:var(--ink-2);font-size:13px;background:rgba(0,0,0,.2)}
+.banner{border-radius:10px;padding:9px 12px;text-align:center;font-weight:700;letter-spacing:.06em;background:linear-gradient(180deg,var(--surface),var(--surface-2));color:var(--ink-2);border:1px solid var(--line-soft);position:relative}
+.banner.mine{background:linear-gradient(180deg,#4a3a16,#2c2210);color:var(--gold-2);border-color:#7a5f22;box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 0 18px rgba(214,168,78,.15)}
+.banner.mine::before,.banner.mine::after{content:"";position:absolute;left:6px;right:6px;height:1px;background:linear-gradient(90deg,transparent,rgba(240,207,122,.5),transparent)}
+.banner.mine::before{top:3px}.banner.mine::after{bottom:3px}
+.banner.last{box-shadow:inset 0 0 0 1px var(--bad)}
+.banner .thinking{display:inline-block;width:22px;text-align:left;margin-left:4px;color:var(--gold)}
+.banner .thinking::after{content:"·";animation:think 1.5s steps(4,end) infinite}
+@keyframes think{0%{content:"·"}25%{content:"··"}50%{content:"···"}75%{content:"··"}}
+@media (prefers-reduced-motion:reduce){.banner .thinking::after{animation:none;content:"···"}}
+.banner small{display:block;font-weight:400;font-size:12px;color:var(--ink-2);letter-spacing:0}
+
+.player{background:linear-gradient(180deg,var(--surface),var(--surface-2));border:1px solid var(--line-soft);border-radius:12px;padding:8px 10px;display:grid;grid-template-columns:1fr auto;gap:6px 10px;align-items:center;box-shadow:inset 0 1px 0 var(--hair)}
+.player.me{border-color:var(--line);box-shadow:inset 0 1px 0 var(--hair),0 0 0 1px rgba(214,168,78,.08)}
+.player .name{display:flex;align-items:center;gap:6px;font-weight:500;min-width:0}
+.player .name span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.player .dot{width:7px;height:7px;border-radius:50%;background:var(--ok);flex:none;box-shadow:0 0 6px var(--ok)}
+.player .dot.off{background:var(--ink-3);box-shadow:none}
+.player .score{font-family:var(--display);font-size:24px;line-height:1}
+.player .score small{font-family:var(--body);font-size:11px;color:var(--ink-3);margin-left:3px;-webkit-text-fill-color:var(--ink-3)}
+.player .holdings{grid-column:1/-1;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.bonus{display:inline-flex;align-items:center;gap:3px;font-size:12px;color:var(--ink-2)}
+.bonus i{width:14px;height:14px;border-radius:3px;display:inline-block}
+.sep{width:1px;height:16px;background:var(--line);margin:0 2px}
+.mini-nobles{display:flex;gap:3px}
+.mini-nobles i{width:16px;height:16px;border-radius:50%;background:var(--foil);display:inline-block;box-shadow:0 0 0 1px rgba(0,0,0,.5)}
+.reserved-strip{grid-column:1/-1;display:flex;gap:6px;align-items:center}
+.reserved-strip .label{font-size:11px;color:var(--ink-3);letter-spacing:.08em;text-transform:uppercase}
+.reserved-strip .card,.reserved-strip .hidden-card{transform-origin:bottom center}
+.reserved-strip .card:nth-of-type(1){rotate:-7deg}
+.reserved-strip .card:nth-of-type(2){rotate:0deg;margin-left:-12px;margin-bottom:3px}
+.reserved-strip .card:nth-of-type(3){rotate:7deg;margin-left:-12px}
+
+.section-label{font-size:11px;color:var(--gold);letter-spacing:.16em;text-transform:uppercase;margin:2px 0 -2px;opacity:.85}
+.nobles{display:flex;gap:8px;justify-content:flex-start}
+.noble{width:62px;height:58px;border-radius:7px;position:relative;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,.5),0 0 0 1px rgba(214,168,78,.45)}
+.noble svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.noble .pts{position:absolute;top:3px;left:4px;font-family:var(--display);font-size:12px;line-height:1;color:var(--gold-2);background:rgba(14,7,9,.85);padding:2px 5px;border-radius:4px;box-shadow:0 0 0 1px rgba(214,168,78,.6)}
+.noble .req{position:absolute;right:3px;bottom:3px;display:flex;gap:2px}
+.noble .req i{width:14px;height:14px;border-radius:3px;font-size:9px;display:inline-flex;align-items:center;justify-content:center;font-weight:700}
+.noble.ok{box-shadow:0 0 0 2px var(--ok),0 0 12px rgba(95,191,122,.4)}
+
+.tier{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.card{position:relative;width:100%;aspect-ratio:66/92;border-radius:7px;overflow:hidden;background:var(--raised);
+  display:flex;flex-direction:column;justify-content:space-between;text-align:left;
+  rotate:var(--tilt,0deg);
+  /* a printed edge, then the shadow it casts on the felt from one light above-left */
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.07),0 1px 0 rgba(255,255,255,.05),
+    0 3px 7px rgba(0,0,0,.6),0 8px 16px rgba(0,0,0,.35),0 0 0 1px rgba(214,168,78,.45)}
+.card .art{position:absolute;inset:0;z-index:0}
+.card .art svg{width:100%;height:100%;display:block}
+.card .head{position:relative;z-index:1;height:34%;display:flex;justify-content:space-between;align-items:flex-start;padding:4px 5px;background:linear-gradient(180deg,rgba(0,0,0,.6),rgba(0,0,0,0))}
+.card .pts{font-family:var(--display);font-weight:700;font-size:16px;line-height:1;color:var(--gold-2);text-shadow:0 1px 2px #000,0 0 6px rgba(0,0,0,.8)}
+.card .gem{width:14px;height:14px;border-radius:50%}
+.card .cost{position:relative;z-index:1;display:grid;grid-template-columns:1fr 1fr;gap:2px;padding:4px 5px;align-content:end;background:linear-gradient(0deg,rgba(0,0,0,.65),rgba(0,0,0,0))}
+.card .cost i{width:16px;height:16px;border-radius:50%;font-size:10px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
+.card.afford{box-shadow:inset 0 0 0 1px rgba(255,255,255,.07),0 3px 7px rgba(0,0,0,.6),0 8px 16px rgba(0,0,0,.35),0 0 0 2px var(--ok),0 0 14px rgba(95,191,122,.4)}
+.card.blocked{filter:saturate(.75)}
+.card.empty{background:transparent;box-shadow:inset 0 0 0 1px var(--line-soft);opacity:.5}
+.deck{position:relative;width:100%;aspect-ratio:66/92;border-radius:7px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;overflow:hidden;
+  background:
+    repeating-linear-gradient(45deg,transparent 0 6px,rgba(214,168,78,.13) 6px 7px),
+    repeating-linear-gradient(-45deg,transparent 0 6px,rgba(214,168,78,.13) 6px 7px),
+    linear-gradient(180deg,#2c2436,#1a1521);
+  box-shadow:0 2px 6px rgba(0,0,0,.55),0 0 0 1px rgba(214,168,78,.45),inset 0 0 0 3px #1a1521,inset 0 0 0 4px rgba(214,168,78,.35)}
+.deck .lvl{font-family:var(--display);font-size:16px;line-height:1;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#1a1521;color:var(--gold-2);box-shadow:0 0 0 1.5px var(--gold),0 0 0 4px #1a1521}
+.deck .cnt{font-size:11px;color:var(--ink-2);background:rgba(26,21,33,.9);padding:0 6px;border-radius:999px}
+.deck:disabled,.deck.blocked{opacity:.4}
+/* The deck is a pile: each drawn card takes a layer off the edge. */
+.deck.p3{box-shadow:2px 3px 0 -1px #2a2333,3px 5px 0 -1px rgba(214,168,78,.25),5px 7px 0 -2px #221c2b,7px 10px 0 -3px #1b1624,0 8px 18px rgba(0,0,0,.5),0 0 0 1px rgba(214,168,78,.45),inset 0 0 0 3px #1a1521,inset 0 0 0 4px rgba(214,168,78,.35)}
+.deck.p2{box-shadow:2px 3px 0 -1px #2a2333,4px 6px 0 -2px #221c2b,0 7px 16px rgba(0,0,0,.5),0 0 0 1px rgba(214,168,78,.45),inset 0 0 0 3px #1a1521,inset 0 0 0 4px rgba(214,168,78,.35)}
+.deck.p1{box-shadow:2px 3px 0 -1px #2a2333,0 6px 14px rgba(0,0,0,.5),0 0 0 1px rgba(214,168,78,.45),inset 0 0 0 3px #1a1521,inset 0 0 0 4px rgba(214,168,78,.35)}
+.deck .back{position:absolute;inset:0;z-index:0;opacity:.95}
+.deck .back svg{width:100%;height:100%;display:block}
+.deck .lvl,.deck .cnt{position:relative;z-index:1}
+
+.bank{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.bankt{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;border-radius:10px;border:1px solid transparent}
+.bankt .big{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;
+  box-shadow:inset 0 -8px 12px rgba(0,0,0,.35),inset 0 0 0 1px rgba(0,0,0,.45),0 0 0 2px rgba(214,168,78,.55),0 3px 6px rgba(0,0,0,.6)}
+.bankt .pick{font-size:11px;color:var(--gold-2);height:14px;font-weight:700}
+.bankt.sel{border-color:var(--gold);background:rgba(214,168,78,.1);box-shadow:0 0 14px rgba(214,168,78,.25)}
+.bankt:disabled,.bankt.blocked{opacity:.45}
+.blocked{cursor:default}
+.bankt.y{opacity:.9}
+/* A gem pile, not a number: the stack shrinks as the bank is drained. */
+.bankt .big{position:relative}
+.bankt.s4 .big{box-shadow:inset 0 -8px 12px rgba(0,0,0,.35),inset 0 0 0 1px rgba(0,0,0,.45),0 0 0 2px rgba(214,168,78,.55),0 3px 0 -1px rgba(0,0,0,.55),0 5px 0 -1px rgba(214,168,78,.3),0 7px 0 -2px rgba(0,0,0,.5),0 10px 0 -3px rgba(214,168,78,.22),0 12px 12px rgba(0,0,0,.55)}
+.bankt.s3 .big{box-shadow:inset 0 -8px 12px rgba(0,0,0,.35),inset 0 0 0 1px rgba(0,0,0,.45),0 0 0 2px rgba(214,168,78,.55),0 3px 0 -1px rgba(0,0,0,.55),0 5px 0 -1px rgba(214,168,78,.3),0 8px 10px rgba(0,0,0,.55)}
+.bankt.s2 .big{box-shadow:inset 0 -8px 12px rgba(0,0,0,.35),inset 0 0 0 1px rgba(0,0,0,.45),0 0 0 2px rgba(214,168,78,.55),0 3px 0 -1px rgba(0,0,0,.55),0 6px 9px rgba(0,0,0,.5)}
+.bankt.s0 .big{opacity:.28;box-shadow:inset 0 0 0 1px rgba(0,0,0,.4),0 0 0 1px rgba(214,168,78,.25)}
+
+.actionbar{position:fixed;left:0;right:0;bottom:0;padding:10px var(--gutter) calc(10px + env(safe-area-inset-bottom,0px));background:linear-gradient(180deg,rgba(18,15,22,0),var(--ground) 35%);
+  display:flex;gap:8px;justify-content:flex-end;align-items:center;pointer-events:none}
+.actionbar>*{pointer-events:auto}
+.actionbar .hint{margin-right:auto;font-size:12px;color:var(--ink-2)}
+/* The gems currently in your hand, before you commit to taking them. */
+.held{display:inline-flex;align-items:center;gap:-6px;margin-right:auto;padding:4px 8px;border-radius:999px;
+  background:rgba(0,0,0,.35);box-shadow:inset 0 0 0 1px var(--line-soft)}
+.held .tok{width:26px;height:26px;font-size:0;margin-left:-7px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.45),0 0 0 2px rgba(214,168,78,.6),0 2px 4px rgba(0,0,0,.6)}
+.held .tok:first-child{margin-left:0}
+.log{text-align:center;min-height:38px;font-family:var(--serif);display:flex;flex-direction:column;gap:1px;justify-content:flex-end}
+.feed-line{font-size:13px;color:var(--ink-3);line-height:1.25}
+.feed-line.mine{color:var(--ink-2)}
+.feed-line.now{color:var(--gold-2);font-size:14px}
+.feed-line.now::before{content:"— ";opacity:.5}
+
+/* ---------- Overlays ---------- */
+.overlay{position:fixed;inset:0;background:rgba(8,6,12,.78);display:flex;align-items:flex-end;justify-content:center;z-index:20;padding:0;-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
+.overlay.center{align-items:center;padding:var(--gutter)}
+/* Handing the phone over must not show the next player the hand they are inheriting. */
+.curtain{background:var(--ground);-webkit-backdrop-filter:none;backdrop-filter:none}
+.curtain::before{content:"";position:absolute;inset:0;
+  background:repeating-linear-gradient(46deg,rgba(255,255,255,.012) 0 2px,rgba(0,0,0,.02) 2px 4px),radial-gradient(70% 45% at 50% 35%,rgba(92,72,110,.28),rgba(92,72,110,0) 70%)}
+.curtain .sheet{position:relative}
+.sheet{width:100%;max-width:480px;background:linear-gradient(180deg,#26202f,#1c1723);border:1px solid var(--line);border-radius:18px 18px 0 0;padding:16px var(--gutter) calc(16px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:12px;max-height:90vh;overflow:auto;
+  box-shadow:inset 0 1px 0 var(--hair),0 -10px 40px rgba(0,0,0,.6)}
+.overlay.center .sheet{border-radius:16px}
+.sheet h3{font-size:16px;font-family:var(--body);font-weight:700}
+.sheet .actions{display:flex;gap:8px;flex-wrap:wrap}
+.sheet .actions .btn{flex:1}
+.bigcard{display:flex;gap:14px;align-items:flex-start}
+.bigcard .card{width:118px;flex:none;aspect-ratio:66/92;border-radius:9px}
+.bigcard .card .pts{font-size:24px}
+.bigcard .card .gem{width:22px;height:22px}
+.bigcard .card .cost i{width:24px;height:24px;font-size:13px}
+.bigcard .card .head{padding:6px 7px}
+.bigcard .card .cost{padding:6px 7px;gap:3px}
+.costlist{display:flex;flex-direction:column;gap:6px;flex:1;font-size:13px}
+.costlist .line{display:flex;align-items:center;gap:8px}
+.costlist .line .tok{width:24px;height:24px;font-size:12px}
+.costlist .line .need{color:var(--ink-2);flex:1}
+.costlist .line .ok{color:var(--ok)}
+.costlist .line .short{color:var(--bad)}
+.verdict{font-size:13px;color:var(--ink-2)}
+.verdict.good{color:var(--ok)}
+.verdict.bad{color:var(--bad)}
+.stepper{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.stepper .st{display:flex;flex-direction:column;align-items:center;gap:6px}
+.stepper .st .tok{width:34px;height:34px;font-size:14px}
+.stepper .st .ret{font-size:12px;color:var(--gold-2);font-weight:700;height:14px}
+.stepper .st .pm{display:flex;gap:4px}
+.stepper .st .pm{gap:8px}
+.stepper .st .pm button{width:46px;height:40px;border-radius:8px;border:1px solid var(--line);font-weight:700;font-size:17px;background:linear-gradient(180deg,#332b3e,#251f2e)}
+.stepper .st .pm button:disabled{opacity:.35}
+.stepper{grid-template-columns:repeat(3,1fr);gap:12px 8px}
+.stepper .st{padding:8px 0;border-radius:10px;background:rgba(0,0,0,.2)}
+.noble-choice{display:flex;gap:10px;justify-content:center}
+.noble-choice .noble{width:84px;height:78px}
+.noble-choice .noble .req i{width:16px;height:16px;font-size:10px}
+.scores{display:flex;flex-direction:column;gap:8px}
+.scores .line{display:flex;justify-content:space-between;align-items:baseline;padding:8px 10px;border-radius:8px;background:var(--raised)}
+.scores .line.win{box-shadow:inset 0 0 0 1px var(--gold)}
+.scores .line .n{font-weight:500}
+.scores .line .s{font-family:var(--display);font-size:20px;color:var(--gold-2)}
+.scores .line .s small{font-family:var(--body);font-size:11px;color:var(--ink-3);margin-left:6px}
+.rules{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;color:var(--ink-2);font-size:13px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);top:calc(12px + env(safe-area-inset-top,0px));background:#3a2020;color:#ffd9d6;border:1px solid #6b3030;padding:10px 14px;border-radius:10px;font-size:13px;z-index:40;max-width:calc(100% - 28px);text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.toast.info{background:#20302a;color:#d6f5e2;border-color:#2f6b4a}
+.conn{position:fixed;left:0;right:0;top:0;padding:calc(6px + env(safe-area-inset-top,0px)) 12px 6px;background:#3b2f10;color:var(--gold-2);font-size:12px;text-align:center;z-index:30}
+.hidden-card{display:flex;align-items:center;justify-content:center;color:var(--gold);font-family:var(--display);overflow:hidden;background:#1d1827}
+.hidden-card svg{width:100%;height:100%;display:block}
+/* ---------- Physical layer ---------- */
+.fx-layer{position:fixed;inset:0;z-index:18;pointer-events:none;overflow:hidden}
+.fx-ghost{position:absolute;transform-origin:top left;will-change:transform,opacity;pointer-events:none}
+.fx-ghost .card,.fx-ghost .noble{width:100%;height:100%;box-shadow:0 14px 28px rgba(0,0,0,.65),0 0 0 1px rgba(214,168,78,.6)}
+.fx-ghost .tok{width:100%;height:100%;font-size:12px}
+/* Pressing an object pushes it into the table; releasing lets it come back up. */
+.card,.deck,.bankt .big,.noble{transition:transform .26s cubic-bezier(.22,1.2,.4,1),box-shadow .26s ease}
+.card.press,.deck.press,.bankt.press .big,.noble.press{transition:transform .085s ease-out,box-shadow .085s ease-out}
+.card.press{transform:translateY(2px) scale(.965)}
+.deck.press{transform:translateY(1px) scale(.975)}
+.bankt.press .big{transform:translateY(2px) scale(.93);box-shadow:inset 0 -3px 8px rgba(0,0,0,.45),inset 0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(214,168,78,.5),0 1px 2px rgba(0,0,0,.6)}
+.card.press,.deck.press{box-shadow:0 1px 3px rgba(0,0,0,.6),0 0 0 1px rgba(214,168,78,.5)}
+.card.afford.press{box-shadow:0 1px 3px rgba(0,0,0,.6),0 0 0 2px var(--ok)}
+@media (prefers-reduced-motion:reduce){.card,.deck,.bankt .big,.noble{transition:none}}
+.spot{box-shadow:0 0 0 3px var(--gold-2),0 0 22px rgba(240,207,122,.45)!important;border-radius:12px;position:relative;z-index:2}
+.tut{position:fixed;left:0;right:0;bottom:0;z-index:15;padding:12px var(--gutter) calc(12px + env(safe-area-inset-bottom,0px));background:linear-gradient(180deg,#26202f,#1c1723);border-top:1px solid #7a5f22;box-shadow:0 -10px 30px rgba(0,0,0,.5);display:flex;flex-direction:column;gap:8px;max-width:520px;margin-inline:auto}
+.tut .tut-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.tut .tut-top h3{font-family:var(--body);font-size:15px;color:var(--gold-2)}
+.tut .tut-top span{font-size:11px;color:var(--ink-3);letter-spacing:.1em}
+.tut p{margin:0;font-size:13px;color:var(--ink);line-height:1.5}
+.tut .tut-btns{display:flex;gap:8px;justify-content:flex-end;align-items:center}
+.tut .tut-btns .wait{margin-right:auto;font-size:12px;color:var(--gold);font-weight:700}
+.tut .btn{min-height:38px;padding:0 14px}
+body.tut-on #game{padding-bottom:210px}
+@media (min-width:520px){:root{--gutter:20px}#game{max-width:520px;margin-inline:auto;width:100%}.actionbar{max-width:520px;margin-inline:auto}}
+</style>
+</head>
+<body>
+
+<div id="conn" class="conn" hidden></div>
+
+<!-- Lobby -->
+<section id="lobby" class="screen on">
+  <div class="brand">
+    <div class="emblem" id="emblem"></div>
+    <h1 class="foil-text">SPLENDOR</h1>
+    <p data-i18n="tagline"></p>
+    <div class="gems"><span class="tok w"></span><span class="tok u"></span><span class="tok g"></span><span class="tok r"></span><span class="tok k"></span><span class="tok y"></span></div>
+  </div>
+  <div class="lang" id="langPick"></div>
+  <div class="panel">
+    <h2 data-i18n="yourName"></h2>
+    <input id="name" maxlength="16" autocomplete="nickname">
+  </div>
+  <div class="panel" id="onlinePanel">
+    <h2 data-i18n="playOnline"></h2>
+    <button class="btn" id="createBtn" data-i18n="create"></button>
+    <div class="row">
+      <input id="code" maxlength="4" autocapitalize="characters" autocomplete="off" spellcheck="false" style="text-transform:uppercase;letter-spacing:.2em;font-family:var(--display)">
+      <button class="btn" id="joinBtn" data-i18n="join"></button>
+    </div>
+  </div>
+  <div class="panel">
+    <h2 data-i18n="direct.title"></h2>
+    <p class="note" data-i18n="direct.intro"></p>
+    <button class="btn primary" id="hostBtn" data-i18n="direct.host"></button>
+    <button class="btn" id="guestBtn" data-i18n="direct.guest"></button>
+  </div>
+  <div class="panel">
+    <h2 data-i18n="playLocal"></h2>
+    <button class="btn primary" id="resumeBtn" data-i18n="resume" hidden></button>
+    <button class="btn" id="localBtn" data-i18n="local"></button>
+    <button class="btn" id="tutBtn" data-i18n="tut.btn"></button>
+
+  </div>
+  <button class="btn ghost" id="rulesBtn0" data-i18n="rules"></button>
+</section>
+
+<!-- Waiting for the second player -->
+<section id="wait" class="screen">
+  <h2 data-i18n="waitTitle"></h2>
+  <div class="code foil-text" id="waitCode"></div>
+  <p class="note" data-i18n="waitHint"></p>
+  <button class="btn primary" id="shareBtn" data-i18n="share"></button>
+  <button class="btn" id="copyBtn" data-i18n="copy"></button>
+  <p><span class="pulse"></span></p>
+  <button class="btn ghost" id="leaveWaitBtn" data-i18n="leave"></button>
+</section>
+
+<!-- Direct connection (no server) -->
+<section id="direct" class="screen">
+  <div class="panel" style="margin-top:24px">
+    <h2 id="directTitle"></h2>
+    <p class="note" id="directHint"></p>
+    <div id="dStep1">
+      <p class="note" id="d1Label" style="margin-bottom:6px"></p>
+      <textarea id="d1Text" class="codebox" rows="4" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
+      <div class="row" style="margin-top:8px"><button class="btn primary" id="d1Share" style="flex:1"></button><button class="btn" id="d1Copy" data-i18n="direct.copy"></button></div>
+    </div>
+    <div id="dStep2" hidden>
+      <p class="note" id="d2Label" style="margin-bottom:6px"></p>
+      <textarea id="d2Text" class="codebox" rows="4" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
+      <div class="row" style="margin-top:8px"><button class="btn" id="d2Paste" data-i18n="direct.paste"></button><button class="btn primary" id="d2Go" style="flex:1"></button></div>
+    </div>
+    <p id="directStatus" class="note" style="min-height:18px"></p>
+  </div>
+  <button class="btn ghost" id="leaveDirectBtn" data-i18n="leave" style="margin-top:12px"></button>
+</section>
+
+<!-- Game table -->
+<section id="game" class="screen">
+  <div class="topbar">
+    <div class="status" id="status"></div>
+    <div class="tools">
+      <button class="iconbtn" id="soundBtn" title="sound"></button>
+      <button class="iconbtn" id="rulesBtn" title="rules">?</button>
+      <button class="iconbtn" id="langBtn"></button>
+      <button class="iconbtn" id="leaveBtn">×</button>
+    </div>
+  </div>
+  <div class="banner" id="banner"></div>
+  <div class="player" id="opp"></div>
+  <div class="section-label" data-i18n="nobles"></div>
+  <div class="nobles" id="nobles"></div>
+  <div class="tier" id="tier3"></div>
+  <div class="tier" id="tier2"></div>
+  <div class="tier" id="tier1"></div>
+  <div class="section-label" data-i18n="bank"></div>
+  <div class="bank" id="bank"></div>
+  <div class="player me" id="me"></div>
+  <div class="log" id="log"></div>
+</section>
+<div class="actionbar" id="actionbar" hidden>
+  <span class="hint" id="actionHint"></span>
+  <span class="held" id="held" hidden></span>
+  <button class="btn" id="clearBtn" data-i18n="cancel" hidden></button>
+  <button class="btn primary" id="takeBtn" hidden></button>
+  <button class="btn" id="passBtnBar" data-i18n="pass" hidden></button>
+</div>
+
+<div class="tut" id="tut" hidden>
+  <div class="tut-top"><h3 id="tutTitle"></h3><span id="tutStep" class="num"></span></div>
+  <p id="tutText"></p>
+  <div class="tut-btns"><span class="wait" id="tutWait"></span><button class="btn ghost" id="tutSkip" data-i18n="tut.skip"></button><button class="btn primary" id="tutNext" data-i18n="tut.next"></button></div>
+</div>
+
+<!-- Overlays -->
+<div class="overlay" id="sheet" hidden>
+  <div class="sheet">
+    <div class="bigcard"><div id="sheetCard"></div><div class="costlist" id="sheetCost"></div></div>
+    <div class="verdict" id="sheetVerdict"></div>
+    <div class="actions">
+      <button class="btn primary" id="buyBtn" data-i18n="buy"></button>
+      <button class="btn" id="reserveBtn" data-i18n="reserve"></button>
+      <button class="btn ghost" id="sheetClose" data-i18n="cancel"></button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay center" id="discard" hidden>
+  <div class="sheet">
+    <h3 data-i18n="discardTitle"></h3>
+    <p class="note" id="discardHint"></p>
+    <div class="stepper" id="stepper"></div>
+    <div class="actions"><button class="btn primary" id="discardBtn" data-i18n="confirm"></button></div>
+  </div>
+</div>
+
+<div class="overlay center" id="nobleDlg" hidden>
+  <div class="sheet">
+    <h3 data-i18n="nobleTitle"></h3>
+    <p class="note" data-i18n="nobleHint"></p>
+    <div class="noble-choice" id="nobleChoice"></div>
+  </div>
+</div>
+
+<div class="overlay center curtain" id="pass" hidden>
+  <div class="sheet">
+    <h3 id="passText"></h3>
+    <p class="note" id="passRecap"></p>
+    <div class="actions"><button class="btn primary" id="passBtn" data-i18n="passOk"></button></div>
+  </div>
+</div>
+
+<div class="overlay center" id="over" hidden>
+  <div class="sheet">
+    <h3 data-i18n="over"></h3>
+    <div class="verdict" id="overText" style="font-size:18px;color:var(--gold-2);font-family:var(--display)"></div>
+    <div class="scores" id="scores"></div>
+    <div class="actions">
+      <button class="btn primary" id="rematchBtn" data-i18n="rematch"></button>
+      <button class="btn ghost" id="overLeave" data-i18n="leave"></button>
+    </div>
+    <p class="note" id="rematchNote" hidden data-i18n="rematchWait"></p>
+  </div>
+</div>
+
+<div class="overlay center" id="rulesDlg" hidden>
+  <div class="sheet">
+    <h3 data-i18n="rules"></h3>
+    <ol class="rules" id="rulesList"></ol>
+    <div class="actions"><button class="btn" id="rulesClose" data-i18n="close"></button></div>
+  </div>
+</div>
+
+<script src="game.js"></script>
+<script src="art.js"></script>
+<script src="fx.js"></script>
+<script>
+(function(){
+'use strict';
+var S = window.Splendor;
+var $ = function(id){ return document.getElementById(id); };
+
+/* ---------------- i18n ---------------- */
+var I18N = {
+  ko: {
+    tagline:'르네상스 보석 상인의 대결', yourName:'내 이름', playOnline:'친구와 온라인으로', create:'새 방 만들기', join:'참가', codePh:'방 코드', playLocal:'한 기기에서', local:'둘이서 번갈아 플레이',
+    artifactNote:'온라인 대전은 서버를 배포한 주소에서 열 수 있어요.', waitTitle:'친구를 기다리는 중', waitHint:'이 코드나 초대 링크를 친구에게 보내세요', share:'초대 링크 보내기', copy:'링크 복사', copied:'링크를 복사했어요', shareText:'스플렌더 한 판 할래? 방 코드: {code}',
+    turnYou:'내 차례', turnOpp:'{name}의 차례', lastRound:'마지막 라운드', turnLocal:'{name}의 차례',
+    take:'가져오기', pass:'차례 넘기기', passHint:'할 수 있는 행동이 없어요', buy:'구매하기', reserve:'예약하기', reserveDeck:'덱에서 예약', cancel:'취소', close:'닫기', confirm:'확인', leave:'나가기', rules:'규칙',
+    bank:'보석 은행', nobles:'귀족', reserved:'예약', cards:'카드 {n}장', deck:'덱', pts:'점', hidden:'비공개',
+    pickHint:'서로 다른 색 3개, 또는 같은 색 2개', deckHint:'덱을 눌러 비공개로 예약', notYourTurnHint:'상대가 고민 중…', selHint:'{n}개 선택됨',
+    discardTitle:'토큰은 10개까지만 가질 수 있어요', discardHint:'{n}개를 은행에 돌려주세요', nobleTitle:'귀족이 방문했어요', nobleHint:'한 명만 선택할 수 있어요',
+    over:'게임 종료', wins:'{name} 승리!', draw:'무승부', rematch:'한 판 더', rematchWait:'상대의 응답을 기다리는 중…', rematchAsked:'{name} 님이 한 판 더 하자고 해요',
+    connecting:'서버에 연결 중…', reconnecting:'연결이 끊겼어요. 다시 연결 중…', offline:'{name} 님이 접속 중이 아니에요', usesGold:'황금 {n}개를 대신 써요', canBuy:'지금 살 수 있어요', cantBuy:'아직 살 수 없어요', reserveFullHint:'예약은 3장까지', notTurn:'내 차례가 아니에요',
+    p1:'플레이어 1', p2:'플레이어 2', you:'나', pass:'{name}에게 기기를 넘겨주세요', passOk:'준비됐어요', tier:'{n}단계',
+    colors:{w:'다이아몬드',u:'사파이어',g:'에메랄드',r:'루비',k:'오닉스',y:'황금'},
+    log:{take:'{name}: {gems} 획득', reserve:'{name}: {tier}단계 카드 예약', reserveDeck:'{name}: {tier}단계 덱에서 비공개 예약', buy:'{name}: {color} 카드 구매 (+{pts}점)', noble:'{name}: 귀족 방문 (+3점)', discard:'{name}: 토큰 반납', pass:'{name}: 차례 넘김'},
+    err:{notYourTurn:'내 차례가 아니에요', badTake:'서로 다른 색 3개 또는 같은 색 2개만 가져올 수 있어요', needFour:'같은 색 2개는 은행에 4개 이상 있을 때만 가능해요', bankShort:'은행에 보석이 부족해요', cantAfford:'보석이 부족해요', reserveFull:'예약은 3장까지만 가능해요', roomFull:'방이 가득 찼어요', roomNotFound:'방을 찾을 수 없어요. 코드를 확인하세요', invalidAction:'할 수 없는 행동이에요', cardGone:'그 카드는 이미 없어요', deckEmpty:'덱이 비었어요', discardCount:'정확한 개수를 돌려주세요', mustDiscard:'먼저 토큰을 돌려주세요', mustChooseNoble:'먼저 귀족을 선택하세요', gameOver:'게임이 끝났어요', noServer:'서버에 연결할 수 없어요. 한 기기 모드로 플레이하세요.', nameNeeded:'이름을 입력하세요'},
+    tut:{btn:'튜토리얼 (컴퓨터와 연습)', skip:'그만두기', next:'다음', done:'혼자 계속하기', waitAct:'위 설명대로 해보세요', good:'잘했어요!', bot:'컴퓨터', skipStep:'이 단계 건너뛰기', steps:[
+      {h:'목표', p:'카드와 귀족으로 점수를 모아 먼저 15점에 도달하세요. 누군가 15점이 되면 그 라운드를 끝까지 하고 최고 점수가 이겨요. 이 연습에서는 컴퓨터 상대와 둡니다. 상단이 상대, 하단이 나예요.'},
+      {h:'보석 가져오기', p:'은행에서 서로 다른 색 보석 3개를 눌러 고르고 아래의 "가져오기"를 누르세요. 황금은 직접 가져올 수 없어요.'},
+      {h:'같은 색 2개', p:'은행에 4개 이상 남은 색이라면 같은 보석을 두 번 눌러 2개를 가져올 수 있어요. 한번 해보세요. (4개 이상인 색이 없으면 건너뛰어도 돼요.)'},
+      {h:'카드 읽는 법', p:'왼쪽 위 숫자는 점수, 오른쪽 위 보석은 이 카드가 주는 보너스 색, 아래 동그라미는 가격이에요. 초록 테두리가 있으면 지금 살 수 있다는 뜻이에요. 카드를 누르면 자세히 볼 수 있어요.'},
+      {h:'카드 구매', p:'살 수 있는 카드를 누른 뒤 "구매하기"를 누르세요. 보석이 모자라면 몇 차례 더 가져오세요. 황금은 부족한 색 대신 쓸 수 있어요.'},
+      {h:'보너스 할인', p:'산 카드의 보석은 영구 할인이에요. 내 패널의 네모 숫자가 색별 할인 개수예요. 같은 색을 모을수록 비싼 카드가 싸져요. 이게 스플렌더의 핵심 엔진이에요.'},
+      {h:'예약', p:'카드를 누르고 "예약하기"를 하면 그 카드를 내 손에 두고 황금 1개를 받아요 (예약은 3장까지). 상대가 노리는 카드를 뺏을 때, 또는 황금이 필요할 때 좋아요. 덱(I·II·III)을 누르면 비공개로 예약해요. 한 장 예약해 보세요.'},
+      {h:'귀족', p:'귀족은 카드 색 개수 조건(예: 파랑 4 · 검정 4)을 채우면 내 차례가 끝날 때 자동으로 찾아와 3점을 줘요. 보석 토큰이 아니라 카드 색이 기준이에요.'},
+      {h:'토큰 한도와 마무리', p:'토큰은 10개까지만 가질 수 있어요. 넘으면 차례 끝에 돌려줘야 해요. 이제 자유롭게 계속해서 15점을 노려보세요. 상단 ? 버튼으로 언제든 규칙을 볼 수 있어요.'}
+    ]},
+    soundOn:'소리 켜짐', soundOff:'소리 꺼짐', resume:'하던 판 이어하기', directOnline:'서버 접속 중', reconnectBtn:'다시 연결', peerLost:'친구와의 연결이 끊겼어요',
+    direct:{title:'서버 없이 친구와 직접 연결', intro:'초대 코드를 메신저로 주고받으면 두 폰이 바로 연결돼요. 방을 만드는 쪽이 코드 1개, 참가하는 쪽이 코드 1개를 보내면 끝.',
+      host:'초대 코드 만들기 (내가 방장)', guest:'초대 코드 받았어요 (참가)', paste:'붙여넣기', copy:'코드 복사',
+      hostTitle:'1단계 · 내 초대 코드를 친구에게', hostHint:'아래 코드를 카카오톡/WhatsApp으로 보내세요. 친구가 답으로 보내는 응답 코드를 2단계에 붙여넣으면 연결돼요.',
+      hostStep1:'내 초대 코드', hostStep2:'2단계 · 친구의 응답 코드', hostGo:'연결하기', shareInvite:'초대 코드 보내기', inviteText:'스플렌더 초대 코드예요. 게임 페이지에서 "초대 코드 받았어요"를 누르고 붙여넣어 주세요:',
+      guestTitle:'친구의 초대 코드 붙여넣기', guestHint:'친구가 보낸 코드를 붙여넣으면 응답 코드가 만들어져요. 그걸 친구에게 다시 보내면 연결돼요.',
+      guestStep1:'내 응답 코드 (친구에게 보내세요)', guestStep2:'친구의 초대 코드', guestGo:'응답 코드 만들기', shareAnswer:'응답 코드 보내기', answerText:'스플렌더 응답 코드예요. 2단계에 붙여넣어 주세요:',
+      making:'코드 만드는 중… (네트워크 확인, 몇 초 걸려요)', waiting:'친구가 응답 코드를 붙여넣기를 기다리는 중…', connecting:'연결 중…', connected:'연결됐어요!', badCode:'코드를 읽을 수 없어요. 전체가 복사됐는지 확인하세요', failed:'연결에 실패했어요. 코드를 새로 만들어 다시 시도하거나, 서버 방식으로 플레이하세요.', unsupported:'이 브라우저는 직접 연결을 지원하지 않아요', pasteFail:'클립보드를 읽을 수 없어요. 길게 눌러 붙여넣기 하세요'},
+    rulesList:['차례마다 한 가지: 서로 다른 보석 3개 가져오기 · 같은 보석 2개 가져오기(은행에 4개 이상일 때) · 카드 1장 예약하고 황금 1개 받기 · 카드 1장 구매하기','구매한 카드의 보석은 영구 할인이에요. 황금은 어떤 보석 대신에도 쓸 수 있어요.','토큰은 최대 10개, 예약 카드는 최대 3장. 덱에서 예약한 카드는 상대에게 보이지 않아요.','차례가 끝날 때 귀족 조건(카드 색 수)을 만족하면 귀족이 방문해요 (+3점).','누군가 15점에 도달하면 그 라운드를 마치고 끝나요. 최고 점수가 승리, 동점이면 카드가 적은 쪽이 승리.']
+  },
+  es: {
+    tagline:'El duelo de los mercaderes del Renacimiento', yourName:'Tu nombre', playOnline:'En línea con un amigo', create:'Crear sala', join:'Unirse', codePh:'Código', playLocal:'En un solo dispositivo', local:'Dos jugadores por turnos',
+    artifactNote:'La partida en línea se abre desde la dirección donde esté desplegado el servidor.', waitTitle:'Esperando a tu amigo', waitHint:'Envía este código o el enlace de invitación', share:'Enviar invitación', copy:'Copiar enlace', copied:'Enlace copiado', shareText:'¿Jugamos Splendor? Código de sala: {code}',
+    turnYou:'Tu turno', turnOpp:'Turno de {name}', lastRound:'Última ronda', turnLocal:'Turno de {name}',
+    take:'Tomar', pass:'Pasar turno', passHint:'No tienes ninguna acción posible', buy:'Comprar', reserve:'Reservar', reserveDeck:'Reservar del mazo', cancel:'Cancelar', close:'Cerrar', confirm:'Confirmar', leave:'Salir', rules:'Reglas',
+    bank:'Banco de gemas', nobles:'Nobles', reserved:'Reservadas', cards:'{n} cartas', deck:'Mazo', pts:'pts', hidden:'oculta',
+    pickHint:'3 gemas distintas, o 2 iguales', deckHint:'Toca un mazo para reservar a ciegas', notYourTurnHint:'Tu rival está pensando…', selHint:'{n} seleccionadas',
+    discardTitle:'Solo puedes tener 10 fichas', discardHint:'Devuelve {n} al banco', nobleTitle:'Te visita un noble', nobleHint:'Solo puedes elegir uno',
+    over:'Fin de la partida', wins:'¡Gana {name}!', draw:'Empate', rematch:'Revancha', rematchWait:'Esperando la respuesta de tu rival…', rematchAsked:'{name} quiere la revancha',
+    connecting:'Conectando con el servidor…', reconnecting:'Se perdió la conexión. Reconectando…', offline:'{name} no está conectado', usesGold:'Usa {n} de oro', canBuy:'Puedes comprarla ahora', cantBuy:'Todavía no puedes comprarla', reserveFullHint:'Máximo 3 reservadas', notTurn:'No es tu turno',
+    p1:'Jugador 1', p2:'Jugador 2', you:'yo', pass:'Pásale el dispositivo a {name}', passOk:'Listo', tier:'Nivel {n}',
+    colors:{w:'Diamante',u:'Zafiro',g:'Esmeralda',r:'Rubí',k:'Ónice',y:'Oro'},
+    log:{take:'{name}: toma {gems}', reserve:'{name}: reserva una carta de nivel {tier}', reserveDeck:'{name}: reserva a ciegas del nivel {tier}', buy:'{name}: compra {color} (+{pts} pts)', noble:'{name}: visita de un noble (+3 pts)', discard:'{name}: devuelve fichas', pass:'{name}: pasa el turno'},
+    err:{notYourTurn:'No es tu turno', badTake:'Solo puedes tomar 3 gemas distintas o 2 iguales', needFour:'Para tomar 2 iguales debe haber al menos 4 en el banco', bankShort:'No hay suficientes gemas en el banco', cantAfford:'No tienes gemas suficientes', reserveFull:'Solo puedes reservar 3 cartas', roomFull:'La sala está llena', roomNotFound:'No se encontró la sala. Revisa el código', invalidAction:'Esa acción no es válida', cardGone:'Esa carta ya no está', deckEmpty:'El mazo está vacío', discardCount:'Devuelve exactamente la cantidad indicada', mustDiscard:'Primero devuelve fichas', mustChooseNoble:'Primero elige un noble', gameOver:'La partida terminó', noServer:'No se puede conectar con el servidor. Juega en un solo dispositivo.', nameNeeded:'Escribe tu nombre'},
+    tut:{btn:'Tutorial (práctica contra la máquina)', skip:'Salir', next:'Siguiente', done:'Seguir jugando', waitAct:'Haz lo que dice arriba', good:'¡Muy bien!', bot:'Máquina', skipStep:'Saltar este paso', steps:[
+      {h:'Objetivo', p:'Reúne puntos con cartas y nobles hasta llegar a 15. Cuando alguien llega a 15 se termina la ronda y gana quien tenga más puntos. En esta práctica juegas contra la máquina: arriba está el rival, abajo estás tú.'},
+      {h:'Tomar gemas', p:'Toca 3 gemas de colores distintos en el banco y pulsa "Tomar" abajo. El oro no se puede tomar directamente.'},
+      {h:'Dos iguales', p:'Si de un color quedan 4 o más en el banco, toca dos veces la misma gema para tomar 2. Pruébalo. (Si ningún color tiene 4, puedes saltar este paso.)'},
+      {h:'Leer una carta', p:'Arriba a la izquierda están los puntos, arriba a la derecha la gema de bonificación que da la carta, y abajo su precio. El borde verde significa que puedes comprarla ahora. Toca una carta para verla en detalle.'},
+      {h:'Comprar', p:'Toca una carta que puedas pagar y pulsa "Comprar". Si te faltan gemas, toma más durante algunos turnos. El oro sustituye a cualquier color que te falte.'},
+      {h:'Descuentos', p:'La gema de cada carta comprada es un descuento permanente. Los cuadrados de tu panel muestran cuántos descuentos tienes de cada color. Cuantas más cartas del mismo color, más baratas salen las caras. Ese es el motor de Splendor.'},
+      {h:'Reservar', p:'Toca una carta y pulsa "Reservar": la guardas en tu mano y recibes 1 oro (máximo 3 reservadas). Sirve para quitarle una carta al rival o para conseguir oro. Tocando un mazo (I·II·III) reservas a ciegas. Reserva una carta.'},
+      {h:'Nobles', p:'Si cumples el requisito de colores de cartas de un noble (por ejemplo, 4 azules y 4 negras), te visita automáticamente al final de tu turno y vale 3 puntos. Cuentan las cartas, no las fichas.'},
+      {h:'Límite y final', p:'Solo puedes tener 10 fichas; si te pasas, devuelves el exceso al final del turno. Ahora sigue jugando libremente hasta los 15 puntos. Con el botón ? puedes ver las reglas cuando quieras.'}
+    ]},
+    soundOn:'Sonido activado', soundOff:'Sonido desactivado', resume:'Continuar la partida', directOnline:'Con servidor', reconnectBtn:'Reconectar', peerLost:'Se perdió la conexión con tu amigo',
+    direct:{title:'Conexión directa sin servidor', intro:'Intercambien un código por mensajería y los dos teléfonos se conectan. Quien crea la sala envía un código y quien se une responde con otro.',
+      host:'Crear código de invitación (anfitrión)', guest:'Tengo un código (unirme)', paste:'Pegar', copy:'Copiar código',
+      hostTitle:'Paso 1 · Envía tu código a tu amigo', hostHint:'Manda este código por WhatsApp/KakaoTalk. Cuando tu amigo te responda con su código, pégalo en el paso 2.',
+      hostStep1:'Mi código de invitación', hostStep2:'Paso 2 · Código de respuesta de tu amigo', hostGo:'Conectar', shareInvite:'Enviar código', inviteText:'Código de invitación de Splendor. En la página del juego toca "Tengo un código" y pégalo:',
+      guestTitle:'Pega el código de tu amigo', guestHint:'Al pegar el código se genera tu código de respuesta. Envíaselo a tu amigo y quedarán conectados.',
+      guestStep1:'Mi código de respuesta (envíalo a tu amigo)', guestStep2:'Código de invitación de tu amigo', guestGo:'Generar respuesta', shareAnswer:'Enviar respuesta', answerText:'Código de respuesta de Splendor. Pégalo en el paso 2:',
+      making:'Generando el código… (revisando la red, tarda unos segundos)', waiting:'Esperando a que tu amigo pegue la respuesta…', connecting:'Conectando…', connected:'¡Conectados!', badCode:'No se pudo leer el código. Comprueba que se copió completo', failed:'No se pudo conectar. Genera un código nuevo e inténtalo otra vez, o juega con servidor.', unsupported:'Este navegador no admite la conexión directa', pasteFail:'No se pudo leer el portapapeles. Mantén pulsado y pega'},
+    rulesList:['En tu turno haz una cosa: tomar 3 gemas distintas · tomar 2 gemas iguales (si hay 4 o más en el banco) · reservar una carta y recibir 1 oro · comprar una carta.','Las gemas de tus cartas son descuentos permanentes. El oro sustituye a cualquier gema.','Máximo 10 fichas y 3 cartas reservadas. Una carta reservada del mazo queda oculta para el rival.','Al final de tu turno, si cumples los requisitos de un noble (colores de cartas), te visita (+3 pts).','Cuando alguien llega a 15 puntos se termina la ronda. Gana el de más puntos; en empate, quien tenga menos cartas.']
+  },
+  en: {
+    tagline:'A duel of Renaissance gem merchants', yourName:'Your name', playOnline:'Online with a friend', create:'Create room', join:'Join', codePh:'Code', playLocal:'On one device', local:'Two players, pass and play',
+    artifactNote:'Online play opens from the address where the server is deployed.', waitTitle:'Waiting for your friend', waitHint:'Send this code or the invite link', share:'Send invite', copy:'Copy link', copied:'Link copied', shareText:'Splendor? Room code: {code}',
+    turnYou:'Your turn', turnOpp:"{name}'s turn", lastRound:'Final round', turnLocal:"{name}'s turn",
+    take:'Take', pass:'Pass', passHint:'No legal action available', buy:'Buy', reserve:'Reserve', reserveDeck:'Reserve from deck', cancel:'Cancel', close:'Close', confirm:'Confirm', leave:'Leave', rules:'Rules',
+    bank:'Gem bank', nobles:'Nobles', reserved:'Reserved', cards:'{n} cards', deck:'Deck', pts:'pts', hidden:'hidden',
+    pickHint:'3 different gems, or 2 of a kind', deckHint:'Tap a deck to reserve blind', notYourTurnHint:'Your opponent is thinking…', selHint:'{n} selected',
+    discardTitle:'You can hold only 10 tokens', discardHint:'Return {n} to the bank', nobleTitle:'A noble visits', nobleHint:'You may choose only one',
+    over:'Game over', wins:'{name} wins!', draw:'Draw', rematch:'Rematch', rematchWait:'Waiting for your opponent…', rematchAsked:'{name} wants a rematch',
+    connecting:'Connecting to server…', reconnecting:'Connection lost. Reconnecting…', offline:'{name} is offline', usesGold:'Uses {n} gold', canBuy:'You can buy this now', cantBuy:"You can't afford this yet", reserveFullHint:'Max 3 reserved', notTurn:'Not your turn',
+    p1:'Player 1', p2:'Player 2', you:'me', pass:'Hand the device to {name}', passOk:'Ready', tier:'Level {n}',
+    colors:{w:'Diamond',u:'Sapphire',g:'Emerald',r:'Ruby',k:'Onyx',y:'Gold'},
+    log:{take:'{name}: takes {gems}', reserve:'{name}: reserves a level {tier} card', reserveDeck:'{name}: reserves blind from level {tier}', buy:'{name}: buys {color} (+{pts} pts)', noble:'{name}: noble visit (+3 pts)', discard:'{name}: returns tokens', pass:'{name}: passes'},
+    err:{notYourTurn:'Not your turn', badTake:'Take 3 different gems or 2 of a kind', needFour:'Two of a kind needs 4 or more in the bank', bankShort:'Not enough gems in the bank', cantAfford:'Not enough gems', reserveFull:'You can reserve only 3 cards', roomFull:'Room is full', roomNotFound:'Room not found. Check the code', invalidAction:'That move is not allowed', cardGone:'That card is gone', deckEmpty:'Deck is empty', discardCount:'Return exactly the required number', mustDiscard:'Return tokens first', mustChooseNoble:'Choose a noble first', gameOver:'The game is over', noServer:'Cannot reach the server. Play on one device instead.', nameNeeded:'Enter your name'},
+    tut:{btn:'Tutorial (practice vs computer)', skip:'Quit', next:'Next', done:'Keep playing', waitAct:'Try what it says above', good:'Well done!', bot:'Computer', skipStep:'Skip this step', steps:[
+      {h:'The goal', p:'Collect points from cards and nobles and reach 15 first. When someone hits 15 the round is finished and the highest score wins. In this practice you play the computer: opponent on top, you at the bottom.'},
+      {h:'Take gems', p:'Tap 3 gems of different colors in the bank, then press "Take" below. Gold cannot be taken directly.'},
+      {h:'Two of a kind', p:'If a color has 4 or more left in the bank, tap the same gem twice to take 2. Try it. (If no color has 4, you may skip this step.)'},
+      {h:'Reading a card', p:'Top-left is the points, top-right is the bonus gem the card gives you, and the circles below are its price. A green outline means you can buy it now. Tap a card to see it in detail.'},
+      {h:'Buy a card', p:'Tap a card you can afford and press "Buy". If you are short, take gems for a few more turns. Gold stands in for any missing color.'},
+      {h:'Bonus discounts', p:'The gem on each bought card is a permanent discount. The squares in your panel show your discounts per color. The more cards of one color, the cheaper the expensive cards get. That is the engine of Splendor.'},
+      {h:'Reserve', p:'Tap a card and press "Reserve": it goes to your hand and you get 1 gold (max 3 reserved). Use it to deny a card your opponent wants, or to get gold. Tap a deck (I·II·III) to reserve blind. Reserve one card now.'},
+      {h:'Nobles', p:'Meet a noble\'s card-color requirement (say 4 blue and 4 black) and it visits you automatically at the end of your turn for 3 points. Cards count, not tokens.'},
+      {h:'Token limit and finish', p:'You can hold only 10 tokens; any excess goes back at the end of your turn. Now keep playing freely and go for 15 points. The ? button shows the rules any time.'}
+    ]},
+    soundOn:'Sound on', soundOff:'Sound off', resume:'Resume game', directOnline:'With server', reconnectBtn:'Reconnect', peerLost:'Lost the connection to your friend',
+    direct:{title:'Direct connection, no server', intro:'Swap one code each over a messenger and the two phones connect directly. The host sends one code, the guest replies with one.',
+      host:'Make an invite code (host)', guest:'I have a code (join)', paste:'Paste', copy:'Copy code',
+      hostTitle:'Step 1 · Send your code to your friend', hostHint:'Send this code over WhatsApp/KakaoTalk. When your friend replies with their code, paste it in step 2.',
+      hostStep1:'My invite code', hostStep2:'Step 2 · Your friend\'s reply code', hostGo:'Connect', shareInvite:'Send code', inviteText:'Splendor invite code. On the game page tap "I have a code" and paste it:',
+      guestTitle:'Paste your friend\'s code', guestHint:'Pasting the code creates your reply code. Send it back and you are connected.',
+      guestStep1:'My reply code (send it to your friend)', guestStep2:'Your friend\'s invite code', guestGo:'Create reply', shareAnswer:'Send reply', answerText:'Splendor reply code. Paste it in step 2:',
+      making:'Creating the code… (checking the network, a few seconds)', waiting:'Waiting for your friend to paste the reply…', connecting:'Connecting…', connected:'Connected!', badCode:'Could not read the code. Check that all of it was copied', failed:'Could not connect. Make a new code and try again, or play with the server.', unsupported:'This browser does not support direct connection', pasteFail:'Cannot read the clipboard. Long-press and paste instead'},
+    rulesList:['Each turn do one thing: take 3 different gems · take 2 of a kind (if 4+ in the bank) · reserve a card and get 1 gold · buy a card.','Gems on your cards are permanent discounts. Gold stands in for any gem.','Max 10 tokens and 3 reserved cards. A card reserved from the deck stays hidden from your opponent.','At the end of your turn, meet a noble\'s requirement (card colors) and it visits you (+3 pts).','When someone reaches 15 points the round is finished. Most points wins; ties go to fewer cards.']
+  }
+};
+var LANG_NAMES = { ko:'한국어', es:'Español', en:'English' };
+var lang = (function(){
+  try { var s = localStorage.getItem('splendor.lang'); if (s && I18N[s]) return s; } catch(e){}
+  var n = (navigator.language || 'en').toLowerCase();
+  return n.indexOf('ko') === 0 ? 'ko' : n.indexOf('es') === 0 ? 'es' : 'en';
+})();
+function t(key, params){
+  var parts = key.split('.'), v = I18N[lang];
+  for (var i = 0; i < parts.length; i++) v = v && v[parts[i]];
+  if (v == null) { v = I18N.en; for (i = 0; i < parts.length; i++) v = v && v[parts[i]]; }
+  if (typeof v !== 'string') return key;
+  return v.replace(/\{(\w+)\}/g, function(_, k){ return params && params[k] != null ? params[k] : ''; });
+}
+function setLang(l){
+  lang = l;
+  try { localStorage.setItem('splendor.lang', l); } catch(e){}
+  document.documentElement.lang = l;
+  document.querySelectorAll('[data-i18n]').forEach(function(el){ el.textContent = t(el.getAttribute('data-i18n')); });
+  $('code').placeholder = t('codePh');
+  $('name').placeholder = t('yourName');
+  $('langBtn').textContent = l.toUpperCase();
+  if ($('soundBtn')) paintSound();
+  var lp = $('langPick'); lp.innerHTML = '';
+  Object.keys(LANG_NAMES).forEach(function(k){
+    var b = document.createElement('button'); b.textContent = LANG_NAMES[k]; b.className = k === l ? 'on' : '';
+    b.onclick = function(){ setLang(k); render(); };
+    lp.appendChild(b);
+  });
+  var rl = $('rulesList'); rl.innerHTML = '';
+  I18N[l].rulesList.forEach(function(r){ var li = document.createElement('li'); li.textContent = r; rl.appendChild(li); });
+  if (view) render();
+}
+
+/* ---------------- App state ---------------- */
+var mode = null;          // 'online' | 'local'
+var seat = 0;             // my seat online; current player in local mode
+var view = null;          // Splendor state as seen by `seat`
+var localState = null;    // full state in local mode
+var meta = { code: null, players: [], rematch: [] };
+var sel = [];             // gem selection for a take action
+var sheetCard = null;     // {card, from:'board'|'reserved'}
+var ret = null;           // discard selection
+var ws = null, session = null, reconnectTimer = null, backoff = 1000, pendingOpen = null;
+var isArtifact = !!(window.claude && window.claude.use);
+var bot = false;          // local mode against a simple computer player (tutorial)
+var tut = { on: false, step: 0, mark: 0 };
+var endPlayed = false, lastRoundShown = false;
+
+function toast(msg, info){
+  var el = document.createElement('div'); el.className = 'toast' + (info ? ' info' : ''); el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(function(){ el.remove(); }, 2600);
+}
+function show(id){
+  ['lobby','wait','direct','game'].forEach(function(s){ $(s).classList.toggle('on', s === id); });
+  $('actionbar').hidden = id !== 'game';
+  window.scrollTo(0, 0);
+}
+// A blocked object must still receive the tap, or it cannot push back.
+function block(el, on){
+  if (on) { el.setAttribute('aria-disabled', 'true'); el.classList.add('blocked'); }
+  else { el.removeAttribute('aria-disabled'); el.classList.remove('blocked'); }
+  return el;
+}
+function isBlocked(el){ return el.getAttribute('aria-disabled') === 'true' || el.disabled; }
+function el(tag, cls, text){ var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+function me(){ return view.players[seat]; }
+function opp(){ return view.players[1 - seat]; }
+function myTurn(){ return view && view.phase !== 'over' && view.current === seat; }
+
+/* ---------------- Rendering ---------------- */
+function tokEl(c, n, big){ var e = el('span', 'tok ' + c + (n === 0 ? ' zero' : ''), String(n)); return e; }
+function cardEl(card, opts){
+  opts = opts || {};
+  var b = el('button', 'card ' + card.color + (opts.afford ? ' afford' : ''));
+  if (opts.fx !== false) b.setAttribute('data-fx', (opts.fxPrefix || 'card') + ':' + card.id);
+  if (window.Art && Art.hash) b.style.setProperty('--tilt', ((Art.hash(card.id) % 160) / 100 - 0.8).toFixed(2) + 'deg');
+  var art = el('span', 'art'); art.innerHTML = window.Art ? Art.card(card.color, card.tier, card.id) : ''; b.appendChild(art);
+  var head = el('div', 'head');
+  head.appendChild(el('span', 'pts num', card.pts ? String(card.pts) : ''));
+  head.appendChild(el('span', 'gem ' + card.color));
+  b.appendChild(head);
+  var cost = el('div', 'cost');
+  S.COLORS.forEach(function(c){ if (card.cost[c]) cost.appendChild(el('i', c, String(card.cost[c]))); });
+  b.appendChild(cost);
+  b.setAttribute('aria-label', t('colors.' + card.color) + ' ' + card.pts + t('pts'));
+  return b;
+}
+function hiddenCardEl(tier){
+  var b = el('button', 'card hidden-card'); block(b, true);
+  b.innerHTML = window.Art && Art.back ? Art.back(tier) : 'L' + tier;
+  return b;
+}
+function nobleEl(noble, ok){
+  var d = el('div', 'noble' + (ok ? ' ok' : ''));
+  d.setAttribute('data-fx', 'noble:' + noble.id);
+  d.innerHTML = window.Art ? Art.noble(parseInt(noble.id.slice(1), 10)) : '';
+  d.appendChild(el('span', 'pts num', '3'));
+  var req = el('div', 'req');
+  S.COLORS.forEach(function(c){ if (noble.req[c]) req.appendChild(el('i', 'tok ' + c, String(noble.req[c]))); });
+  d.appendChild(req);
+  return d;
+}
+function playerEl(p, idx, isMe){
+  var box = $(isMe ? 'me' : 'opp'); box.innerHTML = '';
+  var name = el('div', 'name');
+  if (mode === 'online') { var dot = el('span', 'dot' + ((meta.players[idx] && meta.players[idx].connected) ? '' : ' off')); name.appendChild(dot); }
+  name.appendChild(el('span', null, p.name + (mode === 'online' && isMe ? ' · ' + t('you') : '')));
+  box.appendChild(name);
+  var score = el('div', 'score num foil-text', String(p.points)); score.appendChild(el('small', null, t('pts')));
+  box.appendChild(score);
+  var hold = el('div', 'holdings');
+  var b = S.bonuses(p);
+  S.COLORS.forEach(function(c){ var s = el('span', 'bonus num'); s.setAttribute('data-fx', 'pbonus:' + idx + ':' + c); var i = el('i', 'tok ' + c); i.style.borderRadius = '3px'; s.appendChild(i); s.appendChild(document.createTextNode(String(b[c]))); hold.appendChild(s); });
+  hold.appendChild(el('span', 'sep'));
+  S.COLORS.concat(['y']).forEach(function(c){ var tk = tokEl(c, p.tokens[c]); tk.setAttribute('data-fx', 'ptok:' + idx + ':' + c); hold.appendChild(tk); });
+  var mn = el('span', 'mini-nobles'); mn.setAttribute('data-fx', 'pnoble:' + idx);
+  if (p.nobles.length) { hold.appendChild(el('span', 'sep')); p.nobles.forEach(function(){ mn.appendChild(el('i')); }); hold.appendChild(mn); }
+  box.appendChild(hold);
+  if (p.reserved.length) {
+    var rs = el('div', 'reserved-strip');
+    rs.setAttribute('data-fx', 'pres:' + idx);
+    rs.appendChild(el('span', 'label', t('reserved')));
+    p.reserved.forEach(function(r){
+      if (r.hidden && !r.id) { var h = hiddenCardEl(r.tier); h.style.width = '44px'; rs.appendChild(h); return; }
+      var card = S.CARD_BY_ID[r.id];
+      var ce = cardEl(card, { afford: isMe && S.canAfford(p, card), fxPrefix: 'res' }); ce.style.width = '44px';
+      if (isMe) ce.onclick = function(){ openSheet(card, 'reserved', ce); };
+      else block(ce, true);
+      rs.appendChild(ce);
+    });
+    box.appendChild(rs);
+  }
+}
+function render(){
+  if (!view) return;
+  var p = me(), o = opp();
+  // status + banner
+  var st = $('status'); st.innerHTML = '';
+  if (mode === 'online') { st.appendChild(el('span', null, meta.code || '')); }
+  if (mode === 'p2p') { st.appendChild(el('span', null, p2p.connected ? '⇄' : '⇄ ✕')); }
+  var turnLabel = mode === 'local' ? t('turnLocal', { name: view.players[view.current].name }) : (myTurn() ? t('turnYou') : t('turnOpp', { name: o.name }));
+  var banner = $('banner'); banner.innerHTML = '';
+  banner.className = 'banner' + ((mode === 'local' || myTurn()) ? ' mine' : '') + (view.endTriggered ? ' last' : '');
+  banner.appendChild(document.createTextNode(view.phase === 'over' ? t('over') : turnLabel));
+  var waiting = view.phase !== 'over' && !myTurn() &&
+                (bot ? true : mode === 'local' ? false :
+                 mode === 'p2p' ? p2p.connected : !!(meta.players[1 - seat] && meta.players[1 - seat].connected));
+  if (waiting) banner.appendChild(el('span', 'thinking'));
+  if (view.endTriggered && view.phase !== 'over') banner.appendChild(el('small', null, t('lastRound')));
+  if (mode === 'online' && meta.players[1 - seat] && !meta.players[1 - seat].connected) banner.appendChild(el('small', null, t('offline', { name: o.name })));
+  if (mode === 'p2p' && !p2p.connected && view.phase !== 'over') {
+    banner.appendChild(el('small', null, t('peerLost')));
+    var rb = el('button', 'btn reconnect', t('reconnectBtn')); rb.onclick = function(){ p2pReconnect(); }; banner.appendChild(rb);
+  }
+  playerEl(o, 1 - seat, false);
+  playerEl(p, seat, true);
+  // nobles
+  var nb = $('nobles'); nb.innerHTML = '';
+  view.nobles.forEach(function(id){ nb.appendChild(nobleEl(S.NOBLE_BY_ID[id], S.nobleEligible(p, id))); });
+  // tiers
+  var active = (mode === 'local' || myTurn()) && view.phase === 'action';
+  [3, 2, 1].forEach(function(tier){
+    var row = $('tier' + tier); row.innerHTML = '';
+    var left = view.decks[tier].length;
+    var deck = el('button', 'deck t' + tier + ' p' + (left > 24 ? 3 : left > 12 ? 2 : left > 0 ? 1 : 0));
+    deck.setAttribute('data-fx', 'deck:' + tier);
+    if (window.Art && Art.back) { var bk = el('span', 'back'); bk.innerHTML = Art.back(tier); deck.appendChild(bk); }
+    deck.appendChild(el('span', 'lvl', ['', 'I', 'II', 'III'][tier]));
+    deck.appendChild(el('span', 'cnt num', String(left)));
+    block(deck, !active || !left || p.reserved.length >= S.MAX_RESERVED);
+    deck.onclick = function(){ if (isBlocked(deck)) return refuse(deck); act({ type: 'reserve', tier: tier }); };
+    row.appendChild(deck);
+    view.board[tier].forEach(function(id, slot){
+      if (!id) { var em = el('div', 'card empty'); em.setAttribute('data-fx', 'slot:' + tier + ':' + slot); row.appendChild(em); return; }
+      var card = S.CARD_BY_ID[id];
+      var ce = cardEl(card, { afford: S.canAfford(p, card) });
+      ce.setAttribute('data-slot', tier + ':' + slot);
+      ce.onclick = function(){ if (isBlocked(ce)) return refuse(ce); openSheet(card, 'board', ce); };
+      row.appendChild(ce);
+    });
+  });
+  // bank
+  var bank = $('bank'); bank.innerHTML = '';
+  S.COLORS.concat(['y']).forEach(function(c){
+    var n0 = view.bank[c];
+    var b = el('button', 'bankt ' + c + ' s' + (n0 === 0 ? 0 : n0 >= 4 ? 4 : n0) + (sel.indexOf(c) >= 0 ? ' sel' : ''));
+    var big = el('span', 'big num', String(view.bank[c])); big.setAttribute('data-fx', 'bank:' + c); b.appendChild(big);
+    var n = sel.filter(function(x){ return x === c; }).length;
+    b.appendChild(el('span', 'pick', n ? '+' + n : ''));
+    block(b, c === 'y' || !active || view.bank[c] === 0);
+    b.onclick = function(){ if (isBlocked(b)) return refuse(b); pick(c); };
+    bank.appendChild(b);
+  });
+  // action bar
+  var hint = $('actionHint');
+  if (view.phase === 'over') hint.textContent = '';
+  else if (!active) hint.textContent = t('notYourTurnHint');
+  else hint.textContent = sel.length ? '' : t('pickHint');
+  var heldBox = $('held'); heldBox.innerHTML = ''; heldBox.hidden = !sel.length;
+  sel.forEach(function(c){ heldBox.appendChild(el('span', 'tok ' + c)); });
+  if (sel.length) hint.hidden = true; else hint.hidden = false;
+  var stuck = active && !S.hasLegalAction(view, seat);
+  if (stuck) hint.textContent = t('passHint');
+  $('passBtnBar').hidden = !stuck;
+  $('takeBtn').hidden = !sel.length; $('takeBtn').textContent = t('take') + ' (' + sel.length + ')';
+  $('clearBtn').hidden = !sel.length;
+  // move feed
+  var feed = $('log'); feed.innerHTML = '';
+  var recent = view.log.slice(-3);
+  recent.forEach(function(e, i){
+    var txt = logText(e); if (!txt) return;
+    var line = el('div', 'feed-line' + (e.seat === seat ? ' mine' : '') + (i === recent.length - 1 ? ' now' : ''), txt);
+    line.style.opacity = i === recent.length - 1 ? '1' : (0.34 + i * 0.12);
+    feed.appendChild(line);
+  });
+  // phase dialogs
+  $('discard').hidden = !(view.phase === 'discard' && (mode === 'local' || myTurn()));
+  if (!$('discard').hidden) renderDiscard();
+  $('nobleDlg').hidden = !(view.phase === 'noble' && (mode === 'local' || myTurn()));
+  if (!$('nobleDlg').hidden) renderNoble();
+  $('over').hidden = view.phase !== 'over';
+  if (view.phase === 'over') renderOver();
+  if (tut.on) renderTut();
+}
+function logText(e){
+  var name = view.players[e.seat].name;
+  switch (e.type) {
+    case 'take': return t('log.take', { name: name, gems: e.colors.map(function(c){ return t('colors.' + c); }).join(', ') });
+    case 'reserve': return t(e.hidden ? 'log.reserveDeck' : 'log.reserve', { name: name, tier: e.tier });
+    case 'buy': var c = S.CARD_BY_ID[e.cardId]; return t('log.buy', { name: name, color: t('colors.' + c.color), pts: c.pts });
+    case 'noble': return t('log.noble', { name: name });
+    case 'discard': return t('log.discard', { name: name });
+    case 'pass': return t('log.pass', { name: name });
+  }
+  return '';
+}
+
+
+/* ---------------- The physical layer: play what changed ---------------- */
+// Every state change goes through applyView so the difference can be acted out
+// before the new table is simply there.
+function applyView(next, opts){
+  opts = opts || {};
+  var fx = window.FX;
+  var first = !view;
+  if (fx) fx.settle();            // never measure a table that is still moving
+  var prev = view;
+  var before = (fx && !first && !opts.silent) ? fx.capture() : null;
+  var prevSeq = view ? (view.seq || 0) : -1;
+  view = next;
+  render();
+  if (!fx || opts.silent) return;
+  if (first) return ((next.seq || 0) === 0 && next.turn === 1) ? dealOpening() : undefined;
+  if (next.phase === 'over' && !endPlayed) {
+    endPlayed = true;
+    var won = (mode === 'local' && !bot) ? next.winner != null : next.winner === seat;
+    setTimeout(function(){ fx.play('end', { won: won }); fx.buzz(won ? 'win' : 'lose'); }, 420);
+  }
+  if (next.phase !== 'over') endPlayed = false;
+  if (next.endTriggered && !lastRoundShown && next.phase !== 'over') {
+    lastRoundShown = true;
+    afterFx(function(){
+      var b = $('banner');
+      if (b && b.animate && !fx.reduced()) {
+        try { b.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.035)' }, { transform: 'scale(1)' }],
+                        { duration: 520, easing: 'cubic-bezier(.3,1.3,.4,1)' }); } catch (e) {}
+      }
+      fx.play('knock', { level: 1 }); fx.buzz([20, 80, 20]);
+    });
+  }
+  if (!next.endTriggered) lastRoundShown = false;
+  var fresh = (next.log || []).filter(function(e){ return (e.seq || 0) > prevSeq; });
+  // A rematch rewinds the counter, and a reconnect can hand over a pile of moves at once.
+  // Neither is something to act out: just show the table as it stands.
+  if ((next.seq || 0) < prevSeq || fresh.length > 3) return;
+  if (fresh.length) playMoves(fresh, before, prev);
+  afterFx(bannerBeat);
+}
+
+// Wait until the table has stopped moving, so a dialog never lands on top of a move.
+function afterFx(fn, cap){
+  var tries = 0, max = cap || 40;
+  (function spin(){
+    if (!window.FX || !FX.busy() || tries++ > max) return fn();
+    setTimeout(spin, 90);
+  })();
+}
+// In pass-and-play every move is on your side of the table; otherwise the opponent is across it.
+function soundSide(entrySeat){
+  if (mode === 'local' && !bot) return 'near';
+  return entrySeat === seat ? 'near' : 'far';
+}
+var lastTurnKey = null;
+// The banner hands the turn over after the objects have settled, not during the motion.
+function bannerBeat(){
+  var key = (view.phase === 'over' ? 'over' : view.current) + ':' + view.phase;
+  if (key === lastTurnKey) return;
+  lastTurnKey = key;
+  var fx = window.FX; if (!fx || fx.reduced()) return;
+  var b = $('banner'); if (!b || !b.animate) return;
+  try { b.animate([{ opacity: 1, transform: 'translateY(0)' }, { opacity: .45, transform: 'translateY(-3px)' },
+                   { opacity: 1, transform: 'translateY(0)' }], { duration: 360, easing: 'ease-out' }); } catch (e) {}
+}
+// A tray's number must not tick up while the gem is still in the air.
+function holdCount(key, oldText, landMs){
+  var n = document.querySelector('[data-fx="' + key + '"]');
+  if (!n) return;
+  var target = n.textContent;
+  if (target === String(oldText)) return;
+  n.textContent = oldText;
+  setTimeout(function(){
+    var live = document.querySelector('[data-fx="' + key + '"]');
+    if (!live) return;
+    live.textContent = target;
+    if (window.FX) FX.pop(live, 1.22);
+  }, landMs);
+}
+function ghostOf(rect){ return rect && rect.el ? rect.el.outerHTML : ''; }
+function tokenGhost(c){ return '<span class="tok ' + c + '"></span>'; }
+
+// Lay the table out the way a person would: nobles first, then each row dealt left to right.
+function dealOpening(){
+  var fx = window.FX; if (!fx || fx.reduced()) return;
+  var n = 0;
+  document.querySelectorAll('#nobles .noble').forEach(function(el, i){
+    fx.dealIn(el, { x: el.getBoundingClientRect().left, y: -90 }, { delay: i * 90, ms: 420 });
+    fx.play('slide', { delay: (i * 90) / 1000, level: 0.5 });
+  });
+  [3, 2, 1].forEach(function(tier, row){
+    var deckRect = fx.rectOf('deck:' + tier);
+    document.querySelectorAll('#tier' + tier + ' .card').forEach(function(el, i){
+      var d = 260 + row * 190 + i * 70;
+      fx.dealIn(el, deckRect, { delay: d, ms: 400 });
+      fx.play('slide', { delay: d / 1000, level: 0.55 });
+      n++;
+    });
+  });
+}
+
+// Act out each move that has happened since this client last painted.
+function playMoves(entries, before, prev){
+  var fx = window.FX; if (!fx) return;
+  var clock = 0;
+  entries.forEach(function(e){
+    var mine = e.seat === seat;
+    var side = soundSide(e.seat), level = 1;
+    switch (e.type) {
+      case 'take': {
+        var held = {};
+        e.colors.forEach(function(c, i){
+          var from = before && before['bank:' + c], to = fx.rectOf('ptok:' + e.seat + ':' + c);
+          fx.fly(from, to, tokenGhost(c), { ms: 320, delay: clock + i * 80, cls: 'g-tok' });
+          fx.play('gem', { color: c, delay: (clock + i * 80 + 250) / 1000, side: side });
+          if (prev && held[c] == null) { held[c] = prev.players[e.seat].tokens[c]; }
+        });
+        Object.keys(held).forEach(function(c){
+          var last = e.colors.lastIndexOf(c);
+          holdCount('ptok:' + e.seat + ':' + c, held[c], clock + last * 80 + 320);
+        });
+        clock += 320 + (e.colors.length - 1) * 80;
+        break;
+      }
+      case 'discard': {
+        var i2 = 0;
+        for (var c2 in e.tokens) {
+          for (var k = 0; k < e.tokens[c2]; k++) {
+            var from2 = before && before['ptok:' + e.seat + ':' + c2], to2 = fx.rectOf('bank:' + c2);
+            fx.fly(from2, to2, tokenGhost(c2), { ms: 300, delay: clock + i2 * 70, cls: 'g-tok' });
+            fx.play('gem', { color: c2, delay: (clock + i2 * 70 + 230) / 1000, side: side, level: 0.8 });
+            if (prev) holdCount('bank:' + c2, prev.bank[c2], clock + i2 * 70 + 300);
+            i2++;
+          }
+        }
+        clock += 300 + i2 * 70;
+        break;
+      }
+      case 'buy': {
+        var card = S.CARD_BY_ID[e.cardId];
+        // What it cost this player, worked out from the hand they held a moment ago.
+        var payer = prev && prev.players[e.seat];
+        var pay = payer ? S.payment(payer, card) : null;
+        var paid = 0;
+        if (pay) {
+          Object.keys(pay).forEach(function(pc){
+            for (var q = 0; q < pay[pc]; q++) {
+              fx.fly(before && before['ptok:' + e.seat + ':' + pc], fx.rectOf('bank:' + pc), tokenGhost(pc),
+                     { ms: 260, delay: clock + Math.min(paid * 45, 260), cls: 'g-tok' });
+              if (prev) holdCount('bank:' + pc, prev.bank[pc], clock + Math.min(paid * 45, 260) + 260);
+              paid++;
+            }
+          });
+        }
+        // The card is only picked up once the payment is on its way.
+        var lift = clock + (paid ? 110 : 0);
+        var src = (before && (before['card:' + e.cardId] || before['res:' + e.cardId])) || null;
+        var dst = fx.rectOf('pbonus:' + e.seat + ':' + card.color);
+        fx.fly(src, dst, ghostOf(src), { ms: 400, delay: lift, rot1: -4 });
+        fx.play('buy', { delay: (lift + 260) / 1000, side: side, cost: S.sum(card.cost) });
+        var bonus = document.querySelector('[data-fx="pbonus:' + e.seat + ':' + card.color + '"]');
+        setTimeout(function(){ fx.pop(bonus); }, lift + 400);
+        clock = lift + 300;
+        break;
+      }
+      case 'reserve': {
+        var rsrc = e.cardId ? (before && before['card:' + e.cardId]) : fx.rectOf('deck:' + e.tier);
+        var rdst = fx.rectOf('pres:' + e.seat) || fx.rectOf('ptok:' + e.seat + ':y');
+        fx.fly(rsrc, rdst, e.cardId && rsrc ? ghostOf(rsrc) : '<div class="card hidden-card"></div>',
+               { ms: 350, delay: clock, rot1: -6 });
+        fx.play('slide', { delay: (clock + 120) / 1000, side: side });
+        if (e.gold) {
+          var gfrom = before && before['bank:y'], gto = fx.rectOf('ptok:' + e.seat + ':y');
+          fx.fly(gfrom, gto, tokenGhost('y'), { ms: 320, delay: clock + 200, cls: 'g-tok' });
+          if (prev) holdCount('ptok:' + e.seat + ':y', prev.players[e.seat].tokens.y, clock + 520);
+          fx.play('gem', { color: 'y', delay: (clock + 450) / 1000, side: side });
+        }
+        clock += 320;
+        break;
+      }
+      case 'noble': {
+        var nsrc = before && before['noble:' + e.nobleId];
+        var ndst = fx.rectOf('pnoble:' + e.seat) || fx.rectOf('pbonus:' + e.seat + ':w');
+        fx.fly(nsrc, ndst, ghostOf(nsrc), { ms: 520, delay: clock + 180, lift: 34, easing: 'cubic-bezier(.4,0,.2,1)' });
+        fx.play('noble', { delay: (clock + 420) / 1000, side: side });
+        if (mine) fx.buzz('noble');
+        clock += 420;
+        break;
+      }
+      case 'pass': {
+        fx.play('knock', { delay: clock / 1000, side: side });
+        clock += 200;
+        break;
+      }
+    }
+  });
+  // Any board card that was not on screen a moment ago has just been dealt from its deck.
+  setTimeout(function(){ dealReplacements(before); }, Math.max(120, clock + 30));
+}
+
+function dealReplacements(before){
+  var fx = window.FX; if (!fx || fx.reduced()) return;
+  [1, 2, 3].forEach(function(tier){
+    var deckRect = fx.rectOf('deck:' + tier);
+    if (!deckRect) return;
+    document.querySelectorAll('#tier' + tier + ' .card[data-fx]').forEach(function(el){
+      var key = el.getAttribute('data-fx');
+      if (before && before[key]) return;       // it was already on the table
+      if (el.dataset.dealt === '1') return;
+      el.dataset.dealt = '1';
+      fx.dealIn(el, deckRect, { ms: 400 });
+      fx.play('flip', { delay: 0.18, level: 0.5 });
+    });
+  });
+}
+
+/* ---------------- Press feedback ---------------- */
+// Objects sink under the thumb and come back up, on both phones.
+['pointerdown', 'touchend', 'mousedown', 'keydown'].forEach(function(t){
+  document.addEventListener(t, function(){ if (window.FX) FX.arm(); }, { capture: true, passive: true });
+});
+document.addEventListener('pointerdown', function(ev){
+  var el = ev.target.closest && ev.target.closest('.card,.deck,.bankt,.noble');
+  if (!el || isBlocked(el)) return;
+  if (window.FX) FX.arm();
+  el.classList.add('press');
+}, { passive: true });
+['pointerup', 'pointercancel', 'pointerleave'].forEach(function(t){
+  document.addEventListener(t, function(ev){
+    var el = ev.target.closest && ev.target.closest('.press');
+    if (el) el.classList.remove('press');
+    document.querySelectorAll('.press').forEach(function(n){ n.classList.remove('press'); });
+  }, { passive: true });
+});
+// A blocked object refuses physically instead of doing nothing.
+function refuse(el){
+  if (!window.FX) return;
+  FX.nudge(el); FX.play('deny', { level: 0.75 }); FX.buzz('deny');
+}
+
+/* ---------------- Gem selection ---------------- */
+function pick(c){
+  var was = sel.length;
+  var count = sel.filter(function(x){ return x === c; }).length;
+  if (count === 1 && sel.length === 1) {
+    if (view.bank[c] >= 4) sel = [c, c]; else sel = [];
+  } else if (count >= 1) {
+    sel = sel.filter(function(x){ return x !== c; });
+  } else {
+    if (sel.length === 2 && sel[0] === sel[1]) sel = [c];
+    else if (sel.length < 3) sel.push(c);
+  }
+  if (window.FX) {
+    if (sel.length > was) { FX.play('gem', { color: c, level: 0.8 }); FX.buzz('pick'); }
+    else if (sel.length < was) FX.play('tick', { level: 0.9 });
+  }
+  render();
+}
+$('takeBtn').onclick = function(){ if (sel.length) act({ type: 'take', colors: sel.slice() }); };
+$('clearBtn').onclick = function(){ sel = []; render(); };
+$('passBtnBar').onclick = function(){ act({ type: 'pass' }); };
+
+/* ---------------- Card sheet ---------------- */
+function openSheet(card, from, srcEl){
+  sheetCard = { card: card, from: from };
+  liftFrom = srcEl ? srcEl.getBoundingClientRect() : null;
+  var p = me();
+  $('sheetCard').innerHTML = ''; $('sheetCard').appendChild(cardEl(card));
+  var cl = $('sheetCost'); cl.innerHTML = '';
+  var b = S.bonuses(p);
+  S.COLORS.forEach(function(c){
+    if (!card.cost[c]) return;
+    var line = el('div', 'line');
+    line.appendChild(tokEl(c, card.cost[c]));
+    var need = Math.max(0, card.cost[c] - b[c]);
+    var txt = t('colors.' + c) + ' ' + card.cost[c];
+    if (b[c]) txt += ' − ' + b[c];
+    line.appendChild(el('span', 'need', txt));
+    var have = p.tokens[c];
+    line.appendChild(el('span', have >= need ? 'ok num' : 'short num', need ? (Math.min(have, need) + '/' + need) : '✓'));
+    cl.appendChild(line);
+  });
+  var pay = S.payment(p, card);
+  var v = $('sheetVerdict');
+  var active = (mode === 'local' || myTurn()) && view.phase === 'action';
+  if (!active) { v.className = 'verdict'; v.textContent = t('notTurn'); }
+  else if (pay) { v.className = 'verdict good'; v.textContent = t('canBuy') + (pay.y ? ' · ' + t('usesGold', { n: pay.y }) : ''); }
+  else { v.className = 'verdict bad'; v.textContent = t('cantBuy'); }
+  $('buyBtn').disabled = !active || !pay;
+  $('reserveBtn').hidden = from !== 'board';
+  $('reserveBtn').disabled = !active || p.reserved.length >= S.MAX_RESERVED;
+  $('reserveBtn').textContent = p.reserved.length >= S.MAX_RESERVED ? t('reserveFullHint') : t('reserve');
+  $('sheet').hidden = false;
+  liftCard();
+}
+var liftFrom = null;
+// The sheet's card rises out of the card you actually touched, rather than appearing from nowhere.
+function liftCard(){
+  var fx = window.FX; if (!fx || fx.reduced() || !liftFrom) return;
+  var big = $('sheetCard').firstChild; if (!big || !big.animate) return;
+  var b = big.getBoundingClientRect();
+  if (!b.width) return;
+  var sx = liftFrom.width / b.width, sy = liftFrom.height / b.height;
+  try {
+    big.animate([
+      { transform: 'translate(' + (liftFrom.left - b.left) + 'px,' + (liftFrom.top - b.top) + 'px) scale(' + sx + ',' + sy + ')', opacity: 0.6 },
+      { transform: 'none', opacity: 1 }
+    ], { duration: 280, easing: 'cubic-bezier(.2,.85,.3,1)' });
+  } catch (e) {}
+  fx.play('slide', { level: 0.5 });
+}
+function closeSheet(){ $('sheet').hidden = true; sheetCard = null; liftFrom = null; }
+$('sheetClose').onclick = closeSheet;
+$('sheet').addEventListener('click', function(e){ if (e.target === $('sheet')) closeSheet(); });
+$('buyBtn').onclick = function(){ if (!sheetCard) return; var c = sheetCard.card; closeSheet(); act({ type: 'buy', cardId: c.id }); };
+$('reserveBtn').onclick = function(){ if (!sheetCard) return; var c = sheetCard.card; closeSheet(); act({ type: 'reserve', tier: c.tier, cardId: c.id }); };
+
+/* ---------------- Discard ---------------- */
+function renderDiscard(){
+  var p = me(); var excess = S.sum(p.tokens) - S.MAX_TOKENS;
+  if (!ret) ret = { w: 0, u: 0, g: 0, r: 0, k: 0, y: 0 };
+  var chosen = S.sum(ret);
+  $('discardHint').textContent = t('discardHint', { n: excess }) + ' · ' + chosen + '/' + excess;
+  var sp = $('stepper'); sp.innerHTML = '';
+  S.COLORS.concat(['y']).forEach(function(c){
+    var st = el('div', 'st');
+    st.appendChild(tokEl(c, p.tokens[c] - ret[c]));
+    st.appendChild(el('span', 'ret num', ret[c] ? '−' + ret[c] : ''));
+    var pm = el('div', 'pm');
+    var minus = el('button', null, '−'); minus.disabled = !ret[c]; minus.onclick = function(){ ret[c]--; renderDiscard(); };
+    var plus = el('button', null, '+'); plus.disabled = chosen >= excess || ret[c] >= p.tokens[c]; plus.onclick = function(){ ret[c]++; renderDiscard(); };
+    pm.appendChild(minus); pm.appendChild(plus); st.appendChild(pm);
+    sp.appendChild(st);
+  });
+  $('discardBtn').disabled = chosen !== excess;
+}
+$('discardBtn').onclick = function(){ var r = ret; ret = null; act({ type: 'discard', tokens: r }); };
+
+/* ---------------- Noble choice ---------------- */
+function renderNoble(){
+  var nc = $('nobleChoice'); nc.innerHTML = '';
+  (view.pendingNobles || []).forEach(function(id){
+    var b = el('button'); b.appendChild(nobleEl(S.NOBLE_BY_ID[id], true));
+    b.onclick = function(){ act({ type: 'noble', nobleId: id }); };
+    nc.appendChild(b);
+  });
+}
+
+/* ---------------- Game over ---------------- */
+function renderOver(){
+  $('overText').textContent = view.winner == null ? t('draw') : t('wins', { name: view.players[view.winner].name });
+  var sc = $('scores'); sc.innerHTML = '';
+  view.players.forEach(function(p, i){
+    var line = el('div', 'line' + (view.winner === i ? ' win' : ''));
+    line.appendChild(el('span', 'n', p.name));
+    var s = el('span', 's num', String(p.points)); s.appendChild(el('small', null, t('cards', { n: p.cards.length })));
+    line.appendChild(s); sc.appendChild(line);
+  });
+  var asked = mode === 'online' && meta.rematch.indexOf(seat) >= 0;
+  var oppAsked = mode === 'online' && meta.rematch.indexOf(1 - seat) >= 0;
+  $('rematchBtn').disabled = asked;
+  $('rematchNote').hidden = !(asked || oppAsked);
+  $('rematchNote').textContent = asked ? t('rematchWait') : oppAsked ? t('rematchAsked', { name: opp().name }) : '';
+}
+$('rematchBtn').onclick = function(){
+  if (mode === 'local') { startLocal(bot); return; }
+  if (mode === 'p2p' && p2p.role === 'host') { hostRematch(0); return; }
+  send({ t: 'rematch' });
+};
+$('overLeave').onclick = leave;
+
+/* ---------------- Actions ---------------- */
+function act(action){
+  sel = [];
+  if (mode === 'local') {
+    try {
+      var before = localState.current;
+      localState = S.apply(localState, seat, action);
+      var done = localState.phase === 'action' && localState.current !== before || localState.phase === 'over';
+      if (!bot) seat = localState.current;
+      applyView(S.viewFor(localState, seat));
+      if (done && localState.phase !== 'over' && !bot) afterFx(function(){
+        $('passText').textContent = t('pass', { name: localState.players[seat].name });
+        var lastEntry = localState.log[localState.log.length - 1];
+        $('passRecap').textContent = lastEntry ? logText(lastEntry) : '';
+        $('pass').hidden = false;
+      });
+      if (bot && localState.current === 1 && localState.phase !== 'over') setTimeout(botTurn, botPause());
+      saveLocal();
+    } catch (e) { toast(t('err.' + (e.code || 'invalidAction'))); render(); }
+    return;
+  }
+  if (mode === 'p2p' && p2p.role === 'host') { hostApply(0, action); return; }
+  send({ t: 'action', action: action });
+  render();
+}
+function saveLocal(){
+  try {
+    if (mode === 'local' && localState && localState.phase !== 'over') localStorage.setItem('splendor.local', JSON.stringify({ state: localState, bot: bot, seat: seat }));
+    else localStorage.removeItem('splendor.local');
+  } catch(e){}
+}
+function loadLocal(){ try { return JSON.parse(localStorage.getItem('splendor.local') || 'null'); } catch(e){ return null; } }
+function refreshResume(){ var sv = loadLocal(); $('resumeBtn').hidden = !(sv && sv.state && sv.state.phase !== 'over'); }
+$('resumeBtn').onclick = function(){
+  var sv = loadLocal(); if (!sv) return;
+  mode = 'local'; bot = !!sv.bot; localState = sv.state; seat = bot ? 0 : localState.current;
+  view = null; sel = []; ret = null; meta = { code: null, players: [], rematch: [] };
+  show('game'); applyView(S.viewFor(localState, seat));
+  if (bot && localState.current === 1) setTimeout(botTurn, botPause());
+};
+$('passBtn').onclick = function(){ $('pass').hidden = true; };
+
+/* ---------------- Local mode ---------------- */
+function startLocal(withBot){
+  mode = 'local'; bot = !!withBot;
+  var n = $('name').value.trim();
+  localState = S.newGame([n || t('p1'), bot ? t('tut.bot') : t('p2')]);
+  seat = 0; view = null; sel = []; ret = null; meta = { code: null, players: [], rematch: [] };
+  show('game'); applyView(S.viewFor(localState, 0)); saveLocal();
+}
+$('localBtn').onclick = function(){ endTut(); startLocal(false); };
+$('tutBtn').onclick = function(){ startLocal(true); tut = { on: true, step: 0, mark: 0 }; document.body.classList.add('tut-on'); $('tut').hidden = false; render(); };
+
+/* ---------------- Computer opponent (tutorial) ---------------- */
+function botAction(s){
+  var p = s.players[1], c, i, tier;
+  if (s.phase === 'discard') {
+    var excess = S.sum(p.tokens) - S.MAX_TOKENS, give = { w: 0, u: 0, g: 0, r: 0, k: 0, y: 0 };
+    var order = S.COLORS.slice().sort(function(a, b){ return p.tokens[b] - p.tokens[a]; });
+    for (i = 0; i < order.length && excess > 0; i++) { var n = Math.min(excess, p.tokens[order[i]]); give[order[i]] = n; excess -= n; }
+    if (excess > 0) give.y = excess;
+    return { type: 'discard', tokens: give };
+  }
+  if (s.phase === 'noble') return { type: 'noble', nobleId: s.pendingNobles[0] };
+  var best = null, bestScore = -1;
+  var pool = [];
+  for (tier = 1; tier <= 3; tier++) s.board[tier].forEach(function(id){ if (id) pool.push(S.CARD_BY_ID[id]); });
+  p.reserved.forEach(function(r){ pool.push(S.CARD_BY_ID[r.id]); });
+  pool.forEach(function(card){ if (S.canAfford(p, card)) { var sc = card.pts * 10 + card.tier; if (sc > bestScore) { bestScore = sc; best = card; } } });
+  if (best) return { type: 'buy', cardId: best.id };
+  // Aim at the card with the smallest shortfall and take the colors it needs.
+  var b = S.bonuses(p), target = null, targetShort = 99, needColors = [];
+  pool.forEach(function(card){
+    var short = 0, cols = [];
+    S.COLORS.forEach(function(c){ var d = Math.max(0, (card.cost[c] || 0) - b[c] - p.tokens[c]); if (d > 0) { short += d; cols.push(c); } });
+    if (short < targetShort) { targetShort = short; target = card; needColors = cols; }
+  });
+  var room = S.MAX_TOKENS - S.sum(p.tokens);
+  var pick = needColors.filter(function(c){ return s.bank[c] > 0; });
+  if (pick.length === 1 && s.bank[pick[0]] >= 4 && room >= 2) return { type: 'take', colors: [pick[0], pick[0]] };
+  S.COLORS.forEach(function(c){ if (pick.length < 3 && pick.indexOf(c) < 0 && s.bank[c] > 0) pick.push(c); });
+  pick = pick.slice(0, Math.max(0, Math.min(3, room)));
+  if (pick.length) return { type: 'take', colors: pick };
+  if (p.reserved.length < S.MAX_RESERVED) for (tier = 1; tier <= 3; tier++) if (s.decks[tier].length) return { type: 'reserve', tier: tier };
+  return { type: 'pass' };
+}
+// The beat before the computer reaches for the table.
+function botPause(){ return 620; }
+// A cheap gem grab is quick; committing to an expensive card looks like deliberation.
+function botThink(action){
+  if (!action) return 400;
+  if (action.type === 'buy') { var c = S.CARD_BY_ID[action.cardId]; return 520 + (c ? c.tier * 340 : 0); }
+  if (action.type === 'reserve') return 900;
+  if (action.type === 'discard' || action.type === 'noble') return 450;
+  return 420;
+}
+function botTurn(){
+  if (!bot || !localState || localState.current !== 1 || localState.phase === 'over') return;
+  // Never move on top of the previous move still sliding across the table.
+  if (window.FX && FX.busy()) return setTimeout(botTurn, 220);
+  var planned = null;
+  try { planned = botAction(localState); } catch (e) {}
+  var wait = botThink(planned);
+  if (window.FX && FX.reduced()) wait = 120;
+  setTimeout(function(){ botCommit(planned); }, wait);
+}
+function botCommit(planned){
+  if (!bot || !localState || localState.current !== 1 || localState.phase === 'over') return;
+  try { localState = S.apply(localState, 1, planned || botAction(localState)); }
+  catch (e) { try { localState = S.apply(localState, 1, { type: 'pass' }); } catch (e2) { return; } }
+  applyView(S.viewFor(localState, 0)); saveLocal();
+  if (localState.current === 1 && localState.phase !== 'over') setTimeout(botTurn, botPause());
+}
+
+/* ---------------- Tutorial ---------------- */
+// Each step: a target to spotlight and, for action steps, a test that says when the player has done it.
+var TUT_STEPS = [
+  { target: '#banner' },
+  { target: '#bank', test: function(){ return view.log.some(function(e){ return e.seat === 0 && e.type === 'take' && e.colors.length === 3; }); } },
+  { target: '#bank', test: function(){ return view.log.some(function(e){ return e.seat === 0 && e.type === 'take' && e.colors.length === 2 && e.colors[0] === e.colors[1]; }); }, skippable: true },
+  { target: '#tier1' },
+  { target: '#tier1', test: function(){ return me().cards.length >= 1; } },
+  { target: '#me' },
+  { target: '#tier2', test: function(){ return me().reserved.length >= 1 || view.log.some(function(e){ return e.seat === 0 && e.type === 'reserve'; }); } },
+  { target: '#nobles' },
+  { target: '#me' }
+];
+function renderTut(){
+  var st = TUT_STEPS[tut.step], steps = I18N[lang].tut.steps, text = steps[tut.step];
+  document.querySelectorAll('.spot').forEach(function(e){ e.classList.remove('spot'); });
+  var target = document.querySelector(st.target); if (target) target.classList.add('spot');
+  $('tutTitle').textContent = text.h; $('tutText').textContent = text.p;
+  $('tutStep').textContent = (tut.step + 1) + ' / ' + steps.length;
+  var done = !st.test || st.test();
+  $('tutWait').textContent = st.test ? (done ? t('tut.good') : t('tut.waitAct')) : '';
+  $('tutNext').hidden = !done && !st.skippable;
+  $('tutNext').textContent = tut.step === steps.length - 1 ? t('tut.done') : (done ? t('tut.next') : t('tut.skipStep'));
+  $('actionbar').style.bottom = $('tut').offsetHeight + 'px';
+  if (view.phase === 'over') endTut();
+}
+function endTut(){
+  tut.on = false; document.body.classList.remove('tut-on'); $('tut').hidden = true; $('actionbar').style.bottom = '';
+  document.querySelectorAll('.spot').forEach(function(e){ e.classList.remove('spot'); });
+}
+$('tutNext').onclick = function(){
+  if (tut.step >= TUT_STEPS.length - 1) { endTut(); return; }
+  tut.step++; render();
+  var target = document.querySelector(TUT_STEPS[tut.step].target); if (target) target.scrollIntoView({ block: 'center', behavior: 'smooth' });
+};
+$('tutSkip').onclick = endTut;
+
+/* ---------------- Online mode ---------------- */
+function saveSession(){ try { localStorage.setItem('splendor.session', JSON.stringify(session)); } catch(e){} }
+function loadSession(){ try { return JSON.parse(localStorage.getItem('splendor.session') || 'null'); } catch(e){ return null; } }
+function clearSession(){ session = null; try { localStorage.removeItem('splendor.session'); } catch(e){} }
+function send(msg){
+  if (mode === 'p2p') { if (dc && dc.readyState === 'open') dc.send(JSON.stringify(msg)); else toast(t('peerLost')); return; }
+  if (ws && ws.readyState === 1) ws.send(JSON.stringify(msg)); else toast(t('err.noServer'));
+}
+function connect(onOpen){
+  if (ws && (ws.readyState === 0 || ws.readyState === 1)) { if (ws.readyState === 1) onOpen && onOpen(); else pendingOpen = onOpen; return; }
+  pendingOpen = onOpen;
+  $('conn').hidden = false; $('conn').textContent = t(session ? 'reconnecting' : 'connecting');
+  var url = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host;
+  try { ws = new WebSocket(url); } catch (e) { $('conn').hidden = true; toast(t('err.noServer')); pendingOpen = null; return; }
+  ws.onopen = function(){
+    $('conn').hidden = true; backoff = 1000;
+    var cb = pendingOpen; pendingOpen = null;
+    if (cb) cb(); else if (session) ws.send(JSON.stringify({ t: 'rejoin', code: session.code, token: session.token, name: $('name').value.trim() }));
+  };
+  ws.onmessage = function(ev){ var m; try { m = JSON.parse(ev.data); } catch(e){ return; } onMessage(m); };
+  ws.onclose = function(ev){
+    ws = null;
+    if (ev.code === 4000) { clearSession(); mode = null; view = null; show('lobby'); toast(t('err.invalidAction')); return; }
+    if (mode === 'online' && session) {
+      $('conn').hidden = false; $('conn').textContent = t('reconnecting');
+      reconnectTimer = setTimeout(function(){ connect(); }, backoff); backoff = Math.min(backoff * 2, 10000);
+    } else { $('conn').hidden = true; if (pendingOpen) { pendingOpen = null; toast(t('err.noServer')); } }
+  };
+  ws.onerror = function(){ /* close follows */ };
+}
+function onMessage(m){
+  switch (m.t) {
+    case 'joined':
+      mode = 'online'; seat = m.seat; meta.code = m.code;
+      session = { code: m.code, token: m.token }; saveSession();
+      history.replaceState(null, '', location.pathname);
+      break;
+    case 'state':
+      meta.code = m.code; meta.players = m.players; meta.rematch = m.rematch || []; seat = m.seat;
+      if (!m.state) { $('waitCode').textContent = m.code; show('wait'); return; }
+      var prevPhase = view && view.phase;
+      sel = [];
+      if (prevPhase !== 'discard' && m.state.phase !== 'discard') ret = null;
+      if (!$('game').classList.contains('on')) show('game');
+      applyView(m.state);
+      break;
+    case 'err':
+      if (m.code === 'roomNotFound' && !view) { clearSession(); mode = null; show('lobby'); }
+      toast(t('err.' + m.code));
+      if (view) render();
+      break;
+  }
+}
+function needName(){ var n = $('name').value.trim(); if (!n) { toast(t('err.nameNeeded')); $('name').focus(); return null; } try { localStorage.setItem('splendor.name', n); } catch(e){} return n; }
+$('createBtn').onclick = function(){ var n = needName(); if (!n) return; connect(function(){ ws.send(JSON.stringify({ t: 'create', name: n })); }); };
+$('joinBtn').onclick = function(){
+  var n = needName(); if (!n) return;
+  var c = $('code').value.trim().toUpperCase(); if (c.length !== 4) { $('code').focus(); return; }
+  connect(function(){ ws.send(JSON.stringify({ t: 'join', code: c, name: n })); });
+};
+function inviteLink(){ return location.origin + location.pathname + '?room=' + meta.code; }
+$('shareBtn').onclick = function(){
+  var data = { title: 'Splendor', text: t('shareText', { code: meta.code }), url: inviteLink() };
+  if (navigator.share) navigator.share(data).catch(function(){}); else copyLink();
+};
+function copyLink(){
+  var s = t('shareText', { code: meta.code }) + '\n' + inviteLink();
+  if (navigator.clipboard) navigator.clipboard.writeText(s).then(function(){ toast(t('copied'), true); }, function(){ prompt('', s); });
+  else prompt('', s);
+}
+$('copyBtn').onclick = copyLink;
+function leave(){
+  if (ws) { var w = ws; ws = null; w.onclose = null; w.close(); }
+  clearTimeout(reconnectTimer);
+  clearSession(); mode = null; view = null; localState = null; sel = []; ret = null; endTut(); bot = false; p2pClose();
+  try { localStorage.removeItem('splendor.local'); } catch(e){}
+  refreshResume();
+  $('over').hidden = true; $('pass').hidden = true; $('conn').hidden = true;
+  show('lobby');
+}
+$('leaveBtn').onclick = leave; $('leaveWaitBtn').onclick = leave; $('leaveDirectBtn').onclick = leave;
+
+
+/* ---------------- Direct connection (WebRTC data channel, codes swapped by hand) ---------------- */
+var ICE = { iceServers: [
+  { urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] },
+  { urls: ['turn:openrelay.metered.ca:80', 'turn:openrelay.metered.ca:443', 'turn:openrelay.metered.ca:443?transport=tcp'], username: 'openrelayproject', credential: 'openrelayproject' }
+] };
+var pc = null, dc = null;
+var p2p = { role: null, connected: false, peerName: '', rematch: [] };
+
+function b64u(bytes){ var s = ''; for (var i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]); return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
+function unb64u(str){ str = str.replace(/-/g, '+').replace(/_/g, '/'); while (str.length % 4) str += '='; var bin = atob(str), out = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i); return out; }
+function pump(stream){ return new Response(stream).arrayBuffer().then(function(ab){ return new Uint8Array(ab); }); }
+function encodeCode(obj){
+  var bytes = new TextEncoder().encode(JSON.stringify(obj));
+  if (typeof CompressionStream === 'undefined') return Promise.resolve('SP0.' + b64u(bytes));
+  var cs = new CompressionStream('deflate-raw'); var w = cs.writable.getWriter(); w.write(bytes); w.close();
+  return pump(cs.readable).then(function(out){ return 'SP1.' + b64u(out); });
+}
+function decodeCode(text){
+  var m = /SP([01])\.([A-Za-z0-9_-]+)/.exec(text || '');
+  if (!m) return Promise.reject(new Error('badCode'));
+  var bytes = unb64u(m[2]);
+  var p = m[1] === '0' ? Promise.resolve(bytes) : (function(){ var ds = new DecompressionStream('deflate-raw'); var w = ds.writable.getWriter(); w.write(bytes); w.close(); return pump(ds.readable); })();
+  return p.then(function(b){ return JSON.parse(new TextDecoder().decode(b)); }).catch(function(){ throw new Error('badCode'); });
+}
+function gather(conn){
+  return new Promise(function(res){
+    if (conn.iceGatheringState === 'complete') return res();
+    var to = setTimeout(done, 6000);
+    function done(){ clearTimeout(to); conn.removeEventListener('icegatheringstatechange', chk); res(); }
+    function chk(){ if (conn.iceGatheringState === 'complete') done(); }
+    conn.addEventListener('icegatheringstatechange', chk);
+  });
+}
+function p2pClose(){
+  if (dc) { try { dc.onclose = null; dc.close(); } catch(e){} }
+  if (pc) { try { pc.close(); } catch(e){} }
+  dc = null; pc = null; p2p = { role: null, connected: false, peerName: '', rematch: [] };
+}
+function newPeer(){
+  pc = new RTCPeerConnection(ICE);
+  pc.onconnectionstatechange = function(){
+    if (!pc) return;
+    if (pc.connectionState === 'failed') { if (mode === 'p2p') { p2p.connected = false; render(); } else { $('directStatus').textContent = t('direct.failed'); } }
+  };
+  return pc;
+}
+function wireChannel(ch){
+  dc = ch;
+  ch.onopen = function(){
+    p2p.connected = true;
+    $('directStatus').textContent = t('direct.connected');
+    if (p2p.role === 'host') {
+      mode = 'p2p'; seat = 0;
+      if (!localState) localState = S.newGame([$('name').value.trim() || t('p1'), p2p.peerName || t('p2')]);
+      show('game'); hostBroadcast();
+    } else { mode = 'p2p'; seat = 1; }
+  };
+  ch.onmessage = function(ev){
+    var m; try { m = JSON.parse(ev.data); } catch(e){ return; }
+    if (p2p.role === 'host') hostHandle(m); else onMessage(m);
+  };
+  ch.onclose = function(){ p2p.connected = false; if (mode === 'p2p' && view) render(); };
+}
+// Host side: the same authority the server has, running on the host's phone.
+function hostBroadcast(){
+  if (!$('game').classList.contains('on')) show('game');
+  applyView(S.viewFor(localState, 0));
+  var players = [{ name: localState.players[0].name, connected: true }, { name: localState.players[1].name, connected: p2p.connected }];
+  if (dc && dc.readyState === 'open') dc.send(JSON.stringify({ t: 'state', code: null, seat: 1, players: players, state: S.viewFor(localState, 1), rematch: p2p.rematch }));
+}
+function hostApply(who, action){
+  sel = [];
+  try { localState = S.apply(localState, who, action); }
+  catch (e) { if (who === 0) toast(t('err.' + (e.code || 'invalidAction'))); else if (dc) dc.send(JSON.stringify({ t: 'err', code: e.code || 'invalidAction' })); render(); return; }
+  hostBroadcast();
+}
+function hostRematch(who){
+  if (localState.phase !== 'over') return;
+  if (p2p.rematch.indexOf(who) < 0) p2p.rematch.push(who);
+  if (p2p.rematch.length >= 2) { localState = S.newGame([localState.players[0].name, localState.players[1].name]); p2p.rematch = []; }
+  meta.rematch = p2p.rematch; hostBroadcast();
+}
+function hostHandle(m){
+  if (m.t === 'action') hostApply(1, m.action);
+  else if (m.t === 'rematch') hostRematch(1);
+}
+function directUI(role){
+  show('direct');
+  $('directStatus').textContent = '';
+  $('d1Text').value = ''; $('d2Text').value = '';
+  if (role === 'host') {
+    $('directTitle').textContent = t('direct.hostTitle'); $('directHint').textContent = t('direct.hostHint');
+    $('d1Label').textContent = t('direct.hostStep1'); $('d1Share').textContent = t('direct.shareInvite');
+    $('d2Label').textContent = t('direct.hostStep2'); $('d2Go').textContent = t('direct.hostGo');
+    $('dStep1').hidden = false; $('dStep2').hidden = false; $('d1Text').readOnly = true;
+  } else {
+    $('directTitle').textContent = t('direct.guestTitle'); $('directHint').textContent = t('direct.guestHint');
+    $('d2Label').textContent = t('direct.guestStep2'); $('d2Go').textContent = t('direct.guestGo');
+    $('d1Label').textContent = t('direct.guestStep1'); $('d1Share').textContent = t('direct.shareAnswer');
+    $('dStep1').hidden = true; $('dStep2').hidden = false; $('d1Text').readOnly = true;
+  }
+}
+function startHost(keepGame){
+  if (typeof RTCPeerConnection === 'undefined') { toast(t('direct.unsupported')); return; }
+  var n = needName(); if (!n) return;
+  if (!keepGame) { p2pClose(); localState = null; }
+  else { if (dc) { try { dc.onclose = null; dc.close(); } catch(e){} } if (pc) { try { pc.close(); } catch(e){} } dc = null; pc = null; p2p.connected = false; }
+  p2p.role = 'host';
+  directUI('host');
+  $('directStatus').textContent = t('direct.making');
+  var conn = newPeer();
+  wireChannel(conn.createDataChannel('splendor', { ordered: true }));
+  conn.createOffer().then(function(o){ return conn.setLocalDescription(o); }).then(function(){ return gather(conn); })
+    .then(function(){ return encodeCode({ t: 'o', s: conn.localDescription.sdp, n: n }); })
+    .then(function(code){ $('d1Text').value = code; $('directStatus').textContent = t('direct.waiting'); })
+    .catch(function(){ $('directStatus').textContent = t('direct.failed'); });
+}
+function hostAccept(text){
+  decodeCode(text).then(function(obj){
+    if (obj.t !== 'a' || !pc) throw new Error('badCode');
+    p2p.peerName = String(obj.n || '').slice(0, 16);
+    $('directStatus').textContent = t('direct.connecting');
+    return pc.setRemoteDescription({ type: 'answer', sdp: obj.s });
+  }).catch(function(e){ $('directStatus').textContent = t(e.message === 'badCode' ? 'direct.badCode' : 'direct.failed'); });
+}
+function startGuest(){
+  if (typeof RTCPeerConnection === 'undefined') { toast(t('direct.unsupported')); return; }
+  var n = needName(); if (!n) return;
+  p2pClose(); localState = null; p2p.role = 'guest';
+  directUI('guest');
+}
+function guestAnswer(text){
+  var n = $('name').value.trim();
+  decodeCode(text).then(function(obj){
+    if (obj.t !== 'o') throw new Error('badCode');
+    p2p.peerName = String(obj.n || '').slice(0, 16);
+    $('directStatus').textContent = t('direct.making');
+    var conn = newPeer();
+    conn.ondatachannel = function(ev){ wireChannel(ev.channel); };
+    return conn.setRemoteDescription({ type: 'offer', sdp: obj.s })
+      .then(function(){ return conn.createAnswer(); }).then(function(a){ return conn.setLocalDescription(a); })
+      .then(function(){ return gather(conn); })
+      .then(function(){ return encodeCode({ t: 'a', s: conn.localDescription.sdp, n: n }); })
+      .then(function(code){ $('dStep1').hidden = false; $('d1Text').value = code; $('directStatus').textContent = t('direct.connecting'); $('dStep1').scrollIntoView({ block: 'center', behavior: 'smooth' }); });
+  }).catch(function(e){ $('directStatus').textContent = t(e.message === 'badCode' ? 'direct.badCode' : 'direct.failed'); });
+}
+function p2pReconnect(){
+  if (p2p.role === 'host') startHost(true);
+  else { p2pClose(); p2p.role = 'guest'; directUI('guest'); }
+}
+function shareCode(){
+  var code = $('d1Text').value; if (!code) return;
+  var text = t(p2p.role === 'host' ? 'direct.inviteText' : 'direct.answerText') + '\n' + (p2p.role === 'host' ? location.origin + location.pathname + '\n' : '') + code;
+  if (navigator.share) navigator.share({ text: text }).catch(function(){});
+  else copyText(text);
+}
+function copyText(text){
+  if (navigator.clipboard) navigator.clipboard.writeText(text).then(function(){ toast(t('copied'), true); }, function(){ $('d1Text').select(); });
+  else { $('d1Text').select(); }
+}
+$('hostBtn').onclick = function(){ startHost(false); };
+$('guestBtn').onclick = startGuest;
+$('d1Share').onclick = shareCode;
+$('d1Copy').onclick = function(){ var code = $('d1Text').value; if (code) copyText(t(p2p.role === 'host' ? 'direct.inviteText' : 'direct.answerText') + '\n' + code); };
+$('d2Paste').onclick = function(){
+  if (!navigator.clipboard || !navigator.clipboard.readText) { toast(t('direct.pasteFail')); $('d2Text').focus(); return; }
+  navigator.clipboard.readText().then(function(txt){ $('d2Text').value = txt; $('d2Go').click(); }, function(){ toast(t('direct.pasteFail')); $('d2Text').focus(); });
+};
+$('d2Go').onclick = function(){
+  var text = $('d2Text').value.trim(); if (!text) { $('d2Text').focus(); return; }
+  if (p2p.role === 'host') hostAccept(text); else guestAnswer(text);
+};
+
+/* ---------------- Misc UI ---------------- */
+function paintSound(){
+  var on = !(window.FX && FX.isMuted());
+  var col = on ? 'var(--gold-2)' : 'var(--ink-3)';
+  $('soundBtn').innerHTML = '<svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="' + col +
+    '" stroke-width="1.5" stroke-linecap="round"><path d="M4 8h3l4-3v10l-4-3H4z" fill="' + col + '" fill-opacity=".35"/>' +
+    (on ? '<path d="M13.5 7.5a3.5 3.5 0 0 1 0 5M15.8 5.4a6.5 6.5 0 0 1 0 9.2"/>' : '<path d="M13.5 8l4 4M17.5 8l-4 4"/>') +
+    '</svg>';
+  $('soundBtn').setAttribute('aria-label', t(on ? 'soundOn' : 'soundOff'));
+}
+$('soundBtn').onclick = function(){
+  if (!window.FX) return;
+  var nowMuted = FX.setMuted(!FX.isMuted());
+  paintSound();
+  if (!nowMuted) { FX.arm(); FX.play('gem', { color: 'g' }); }
+};
+$('rulesBtn').onclick = $('rulesBtn0').onclick = function(){ $('rulesDlg').hidden = false; };
+$('rulesClose').onclick = function(){ $('rulesDlg').hidden = true; };
+$('langBtn').onclick = function(){ var ks = Object.keys(LANG_NAMES); setLang(ks[(ks.indexOf(lang) + 1) % ks.length]); };
+$('code').addEventListener('input', function(){ this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 4); });
+document.addEventListener('keydown', function(e){ if (e.key === 'Escape') { closeSheet(); $('rulesDlg').hidden = true; } });
+
+/* ---------------- Boot ---------------- */
+if (window.Art) $('emblem').innerHTML = Art.emblem();
+setLang(lang);
+try { $('name').value = localStorage.getItem('splendor.name') || ''; } catch(e){}
+var params = new URLSearchParams(location.search);
+refreshResume();
+if (isArtifact || location.protocol === 'file:') { $('onlinePanel').hidden = true; }
+else if (params.get('room')) { $('code').value = params.get('room').toUpperCase().slice(0, 4); clearSession(); }
+else {
+  session = loadSession();
+  if (session) { mode = 'online'; connect(); }
+}
+})();
+</script>
+</body>
+</html>
