@@ -734,6 +734,8 @@ var I18N = {
         buyPick:{h:'살 수 있는 카드', p:'연습을 위해 부족한 보석을 채워드렸어요. <b>초록 테두리</b>는 지금 살 수 있다는 표시입니다. 빛나는 카드를 누르세요.', p2:'방금 모은 보석으로 벌써 살 수 있는 카드가 있어요. <b>초록 테두리</b>가 그 표시입니다. 빛나는 카드를 누르세요.', do:'빛나는 카드를 누르세요'},
         buyDo:{h:'구매하기', p:'카드를 누르면 가격과 내가 가진 보석이 나란히 보입니다. <b>구매하기</b>를 누르세요.', do:'구매하기를 누르세요'},
         bonus:{h:'방금 생긴 할인', p:'이 칸의 네모 숫자가 <b>1</b>로 올라갔습니다. 낸 보석은 은행으로 돌아갔지만, 이 할인은 게임이 끝날 때까지 남아요.<br><b>왜 중요한가:</b> 할인이 쌓일수록 같은 보석으로 더 비싼 카드를 살 수 있습니다. 이 눈덩이를 굴리는 것이 이 게임이에요.'},
+        oppTurn2:{h:'컴퓨터 차례', p:'보석을 가져갔으면 한 차례가 끝난 거예요. 그래서 바로 상대 차례가 옵니다.'},
+        oppTurn3:{h:'컴퓨터 차례', p:'예약도 한 차례를 쓰는 행동이에요. 그래서 다시 상대 차례입니다.'},
         oppBuy:{h:'다시 컴퓨터 차례', p:'상대의 수를 한 번 더 보세요. 상대도 같은 방식으로 할인을 쌓고 있습니다.<br><b>왜 봐야 하는가:</b> 상대가 거의 살 수 있는 카드가 보이면, 그 카드를 먼저 사거나 <b>예약</b>해서 가져가지 못하게 할 수 있어요. 다음에 그 방법을 배웁니다.'},
         reserveCard:{h:'깔린 카드도 예약할 수 있어요', p:'예약은 카드를 <b>내 손에 찜해 두는 것</b>입니다. 지금은 못 사도 나중에 내가 살 수 있고, 그동안 상대는 그 카드를 가져갈 수 없어요.<br><b>언제 쓰는가:</b> ① 상대가 노리는 카드를 가로챌 때 ② 비싼 카드를 미리 확보하고 천천히 보석을 모을 때. 빛나는 카드를 누르세요.', do:'빛나는 카드를 누르세요'},
         reserveDo:{h:'예약하기', p:'이번에는 구매가 아니라 <b>예약하기</b>를 누릅니다. 카드가 내 손으로 오고 <b>황금 1개</b>를 받아요.', do:'예약하기를 누르세요'},
@@ -792,6 +794,8 @@ var I18N = {
         buyPick:{h:'Una carta a tu alcance', p:'Te hemos completado las gemas que faltaban. El <b>borde verde</b> significa que puedes comprarla ya. Toca la carta que brilla.', p2:'Con las gemas que acabas de reunir ya puedes comprar una carta. El <b>borde verde</b> lo indica. Toca la que brilla.', do:'Toca la carta que brilla'},
         buyDo:{h:'Comprar', p:'Al tocar una carta ves su precio junto a lo que tienes. Pulsa <b>Comprar</b>.', do:'Pulsa Comprar'},
         bonus:{h:'Tu primer descuento', p:'El cuadrado de esta casilla ha subido a <b>1</b>. Las gemas que pagaste volvieron al banco, pero este descuento se queda hasta el final.<br><b>Por qué importa:</b> cuanto más descuento, más cara es la carta que alcanzas con las mismas gemas. Esa bola de nieve es el juego.'},
+        oppTurn2:{h:'Turno de la máquina', p:'Tomar gemas gasta el turno entero, así que ahora le toca a ella.'},
+        oppTurn3:{h:'Turno de la máquina', p:'Reservar también gasta un turno, así que la máquina vuelve a jugar.'},
         oppBuy:{h:'Otra vez la máquina', p:'Mira su jugada una vez más: también está acumulando descuentos.<br><b>Por qué mirar:</b> si ves una carta que tu rival casi puede pagar, puedes comprarla antes o <b>reservarla</b> para que no la tenga. Eso se aprende ahora.'},
         reserveCard:{h:'Las cartas del mercado también se reservan', p:'Reservar es <b>guardarte una carta en la mano</b>. Aunque hoy no puedas pagarla, será tuya para comprar más tarde y mientras tanto tu rival no puede llevársela.<br><b>Cuándo usarlo:</b> 1) para quitarle una carta que persigue 2) para asegurarte una carta cara mientras juntas gemas con calma. Toca la carta que brilla.', do:'Toca la carta que brilla'},
         reserveDo:{h:'Reservar', p:'Esta vez no compras: pulsa <b>Reservar</b>. La carta pasa a tu mano y recibes <b>1 oro</b>.', do:'Pulsa Reservar'},
@@ -850,6 +854,8 @@ var I18N = {
         buyPick:{h:'A card you can afford', p:'The gems you were short of have been topped up. A <b>green outline</b> means you can buy it now. Tap the glowing card.', p2:'The gems you just collected already cover a card. The <b>green outline</b> marks it. Tap the glowing card.', do:'Tap the glowing card'},
         buyDo:{h:'Buy it', p:'Tapping a card shows its price beside what you hold. Press <b>Buy</b>.', do:'Press Buy'},
         bonus:{h:'Your first discount', p:'The square in this box has gone to <b>1</b>. The gems you paid went back to the bank, but this discount stays until the end of the game.<br><b>Why it matters:</b> the more discount you hold, the dearer the card the same gems will buy. That snowball is the game.'},
+        oppTurn2:{h:'The computer\'s turn', p:'Taking gems spends the whole turn, so the computer plays now.'},
+        oppTurn3:{h:'The computer\'s turn', p:'Reserving spends a turn too, so the computer goes again.'},
         oppBuy:{h:'The computer again', p:'Watch one more of its turns: it is building discounts the same way you are.<br><b>Why watch:</b> when you spot a card your opponent can nearly afford, you can buy it first or <b>reserve</b> it so they cannot. That is next.'},
         reserveCard:{h:'Face-up cards can be reserved too', p:'Reserving <b>puts a card in your hand</b>. You may not be able to pay for it today, but it is yours to buy later and your opponent cannot take it in the meantime.<br><b>When to use it:</b> 1) to take a card your opponent is going for 2) to lock in an expensive card while you gather gems. Tap the glowing card.', do:'Tap the glowing card'},
         reserveDo:{h:'Reserve it', p:'This time do not buy: press <b>Reserve</b>. The card comes to your hand and you get <b>1 gold</b>.', do:'Press Reserve'},
@@ -1783,6 +1789,7 @@ var TUT = [
                     at: function(){ return document.querySelector('#bank .bankt.' + tut.pairColor); },
                     allow: [function(){ return document.querySelector('#bank .bankt.' + tut.pairColor); }, '#takeBtn', '#clearBtn'],
                     done: function(e){ return e.type === 'take' && e.colors.length === 2; } },
+  { id: 'oppTurn2', at: function(){ return $('opp'); }, watch: true },
   { id: 'buyPick',  before: rigAffordable, at: tutCardEl, allow: [tutCardEl],
                     ready: function(){ return !$('sheet').hidden; } },
   { id: 'buyDo',    at: function(){ return $('buyBtn'); }, allow: ['#buyBtn'],
@@ -1795,6 +1802,7 @@ var TUT = [
                     ready: function(){ return !$('sheet').hidden; } },
   { id: 'reserveDo', at: function(){ return $('reserveBtn'); }, allow: ['#reserveBtn'],
                     done: function(e){ return e.type === 'reserve' && !e.hidden; } },
+  { id: 'oppTurn3', at: function(){ return $('opp'); }, watch: true },
   { id: 'reserveDeck', at: function(){ return document.querySelector('#tier3 .deck'); },
                     allow: ['#tier3 .deck'],
                     done: function(e){ return e.type === 'reserve' && e.hidden; } },
@@ -2006,6 +2014,7 @@ function paintCoach(settled){
   var body = (st.id === 'buyPick' && !tut.rigged && txt.p2) ? txt.p2 : txt.p;
   $('coachText').innerHTML = coachFill(body);
   $('coachStep').textContent = (tut.step + 1) + ' / ' + TUT.length;
+  $('coachCard').setAttribute('data-step', st.id);
   var acting = !!st.allow;
   var waitingOnThem = !!st.watch && !tut.oppMoved;
   $('coachDo').textContent = acting ? coachFill(txt.do || '')
