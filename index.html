@@ -1627,8 +1627,21 @@ setLang(lang);
 try { $('name').value = localStorage.getItem('splendor.name') || ''; } catch(e){}
 var params = new URLSearchParams(location.search);
 refreshResume();
+$('onlinePanel').hidden = true;
+function probeServer(){
+  if (isArtifact || location.protocol === 'file:') return;
+  var done = false, to = setTimeout(function(){ done = true; }, 2500);
+  try {
+    fetch('health', { cache: 'no-store' }).then(function(r){ return r.ok ? r.text() : ''; }).then(function(txt){
+      if (done || txt.trim() !== 'ok') return;
+      clearTimeout(to);
+      $('onlinePanel').hidden = false;
+    }, function(){});
+  } catch (e) {}
+}
+probeServer();
 if (isArtifact || location.protocol === 'file:') { $('onlinePanel').hidden = true; }
-else if (params.get('room')) { $('code').value = params.get('room').toUpperCase().slice(0, 4); clearSession(); }
+else if (params.get('room')) { $('onlinePanel').hidden = false; $('code').value = params.get('room').toUpperCase().slice(0, 4); clearSession(); }
 else {
   session = loadSession();
   if (session) { mode = 'online'; connect(); }
