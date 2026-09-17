@@ -94,13 +94,69 @@ h1,h2,h3{font-family:var(--display);font-weight:700;margin:0;text-wrap:balance;l
 .rule::before,.rule::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
 
 /* ---------- Lobby ---------- */
-#lobby{justify-content:center;gap:20px;padding-block:28px;max-width:420px;margin-inline:auto;width:100%}
+#lobby{justify-content:safe center;gap:20px;padding-block:64px 28px;max-width:420px;margin-inline:auto;width:100%}
 .brand{text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px}
 .brand .emblem{width:96px;height:96px;filter:drop-shadow(0 6px 14px rgba(0,0,0,.6))}
 .brand h1{font-size:36px;letter-spacing:.18em;padding-left:.18em;line-height:1.1}
 .brand p{margin:0;color:var(--ink-2);font-family:var(--serif);font-size:16px;font-style:italic}
 .brand .gems{display:flex;justify-content:center;gap:10px;margin-top:8px}
 .brand .gems .tok{width:18px;height:18px}
+
+/* The lobby's own top bar: who I am on the left, friends and language on the right.
+   It is pinned to the top of the viewport so the panels below can stay centred. */
+.lobbytop{position:fixed;top:calc(8px + env(safe-area-inset-top,0px));left:0;right:0;z-index:15;
+  display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:40px;
+  max-width:420px;margin-inline:auto;padding-inline:var(--gutter);pointer-events:none}
+.lobbytop>*{pointer-events:auto}
+.lobbytop .who{font-family:var(--display);font-size:17px;color:var(--gold-2);letter-spacing:.04em;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.lobbytop .tools{display:flex;gap:8px;align-items:center;position:relative;flex:none}
+.lbtn{position:relative;width:40px;height:40px;border-radius:11px;border:1px solid var(--line-soft);
+  background:linear-gradient(180deg,#2c2536,#211b29);color:var(--ink-2);
+  display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;letter-spacing:.08em;
+  box-shadow:inset 0 1px 0 var(--hair),0 2px 6px rgba(0,0,0,.35)}
+.lbtn svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.lbtn .badge{position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;padding:0 4px;border-radius:999px;
+  background:var(--ok);color:#072c16;font-size:10px;font-weight:800;line-height:16px;letter-spacing:0;
+  border:1px solid rgba(0,0,0,.45);box-shadow:0 0 8px rgba(95,191,122,.5)}
+.lang.menu{position:absolute;top:48px;right:0;flex-direction:column;gap:2px;padding:6px;min-width:152px;z-index:12;
+  background:linear-gradient(180deg,#2a2333,#1d1826);border:1px solid var(--line);border-radius:12px;
+  box-shadow:0 14px 34px rgba(0,0,0,.55)}
+.lang.menu button{width:100%;justify-content:flex-start;text-align:left;padding:10px 12px;border-radius:8px;
+  border:1px solid transparent;font-size:14px}
+.lang.menu button.on{background:rgba(214,168,78,.10);border-color:var(--line-soft)}
+
+/* Friends live in a drawer instead of a third panel on the main screen. */
+.drawer{position:fixed;inset:0;z-index:30;display:flex;justify-content:flex-end}
+.drawer .scrim{position:absolute;inset:0;background:rgba(8,6,12,.62);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
+.drawer-body{position:relative;width:min(380px,90vw);height:100%;display:flex;flex-direction:column;gap:12px;overflow:auto;
+  padding:calc(14px + env(safe-area-inset-top,0px)) var(--gutter) calc(16px + env(safe-area-inset-bottom,0px));
+  background:linear-gradient(180deg,#27212f,#1a1622);border-left:1px solid var(--line);
+  box-shadow:-16px 0 46px rgba(0,0,0,.6);animation:drawerIn .22s cubic-bezier(.2,.8,.3,1)}
+@keyframes drawerIn{from{transform:translateX(102%)}to{transform:none}}
+@media (prefers-reduced-motion:reduce){.drawer-body{animation:none}}
+.drawer-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.drawer-head h2{font-size:13px;color:var(--gold);letter-spacing:.16em;text-transform:uppercase;font-family:var(--body);font-weight:500}
+.drawer-head .lbtn{width:34px;height:34px;font-size:18px;font-weight:400}
+.drawer .friends-panel{flex:0 0 auto;justify-content:flex-start}
+.drawer-body>.btn{flex:none;margin-top:auto}
+.drawer .code-panel .whoami{align-items:flex-start}
+
+@media (max-height:900px){
+  #lobby{gap:13px;padding-block:60px 18px}
+  #lobby .panel{padding:13px;gap:9px}
+  .brand .emblem{width:72px;height:72px}
+  .brand h1{font-size:30px}
+  .brand p{font-size:14px}
+  .brand .gems{margin-top:2px}
+}
+@media (max-height:700px){
+  #lobby{gap:10px}
+  .brand .emblem{width:56px;height:56px}
+  .brand h1{font-size:25px}
+  .brand p,.brand .gems{display:none}
+  #authPanel .note{font-size:11px}
+}
 
 /* ---------- Waiting / direct ---------- */
 #wait{justify-content:center;align-items:center;gap:18px;text-align:center;padding-block:32px}
@@ -385,13 +441,23 @@ body.tut-on .actionbar{z-index:23}
 
 <!-- Lobby -->
 <section id="lobby" class="screen on">
+  <div class="lobbytop">
+    <span class="who" id="topWho"></span>
+    <div class="tools">
+      <button class="lbtn" id="friendsBtn" hidden>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9.2" cy="8" r="3.4"/><path d="M2.8 19.2c.5-3.5 3.3-5.5 6.4-5.5s5.9 2 6.4 5.5"/><circle cx="17.4" cy="8.9" r="2.5"/><path d="M16.3 14c2.7-.2 4.7 1.6 5.1 4.4"/></svg>
+        <span class="badge num" id="friendsBadge" hidden></span>
+      </button>
+      <button class="lbtn" id="langOpen"></button>
+      <div class="lang menu" id="langPick" hidden></div>
+    </div>
+  </div>
   <div class="brand">
     <div class="emblem" id="emblem"></div>
     <h1 class="foil-text">SPLENDOR</h1>
     <p data-i18n="tagline"></p>
     <div class="gems"><span class="tok w"></span><span class="tok u"></span><span class="tok g"></span><span class="tok r"></span><span class="tok k"></span><span class="tok y"></span></div>
   </div>
-  <div class="lang" id="langPick"></div>
 
   <!-- signed out -->
   <div class="panel" id="authPanel">
@@ -405,19 +471,8 @@ body.tut-on .actionbar{z-index:23}
   <!-- signed in -->
   <div id="homePanel" hidden>
     <div class="panel">
-      <div class="whoami">
-        <div><span class="who-name" id="homeName"></span><span class="note" id="homeCode"></span></div>
-        <button class="btn ghost" id="logoutBtn" data-i18n="auth.logout"></button>
-      </div>
-      <div class="row"><button class="btn" id="shareCodeBtn" data-i18n="friends.share"></button><button class="btn" id="copyCodeBtn" data-i18n="friends.copy"></button></div>
-    </div>
-    <div class="panel">
       <h2 data-i18n="friends.title"></h2>
-      <div id="friendList"></div>
-      <div class="row">
-        <input id="friendCode" maxlength="17" autocapitalize="characters" autocomplete="off" spellcheck="false" style="letter-spacing:.12em;font-family:ui-monospace,Menlo,monospace">
-        <button class="btn" id="addFriendBtn" data-i18n="friends.add"></button>
-      </div>
+      <button class="btn primary" id="openFriendsBtn"></button>
     </div>
     <div class="panel">
       <h2 data-i18n="roomTitle"></h2>
@@ -446,6 +501,33 @@ body.tut-on .actionbar{z-index:23}
   </div>
   <button class="btn ghost" id="rulesBtn0" data-i18n="rules"></button>
 </section>
+
+<!-- Friends, opened from the lobby's top-right button -->
+<div class="drawer" id="friendsDrawer" hidden>
+  <div class="scrim" id="friendsScrim"></div>
+  <aside class="drawer-body">
+    <div class="drawer-head">
+      <h2 data-i18n="friends.title"></h2>
+      <button class="lbtn" id="friendsClose">×</button>
+    </div>
+    <div class="panel friends-panel"><div id="friendList"></div></div>
+    <div class="panel">
+      <h2 data-i18n="friends.add"></h2>
+      <div class="row">
+        <input id="friendCode" maxlength="17" autocapitalize="characters" autocomplete="off" spellcheck="false" style="letter-spacing:.12em;font-family:ui-monospace,Menlo,monospace">
+        <button class="btn" id="addFriendBtn" data-i18n="friends.add"></button>
+      </div>
+    </div>
+    <div class="panel code-panel">
+      <h2 data-i18n="friends.myCode"></h2>
+      <div class="whoami">
+        <div><span class="who-name" id="homeName"></span><span class="note" id="homeCode"></span></div>
+      </div>
+      <div class="row"><button class="btn" id="shareCodeBtn" data-i18n="friends.share"></button><button class="btn" id="copyCodeBtn" data-i18n="friends.copy"></button></div>
+    </div>
+    <button class="btn ghost" id="logoutBtn" data-i18n="auth.logout"></button>
+  </aside>
+</div>
 
 <!-- Waiting for the second player -->
 <section id="wait" class="screen">
@@ -663,7 +745,7 @@ var I18N = {
       }},
     roomTitle:'방 코드로 놀기', roomHint:'친구 목록에 없는 사람과 할 때 쓰세요.',
     auth:{title:'로그인 / 가입', nick:'닉네임', pass:'비밀번호', go:'로그인', hint:'처음이면 원하는 닉네임과 비밀번호를 넣으면 그대로 가입됩니다. 같은 닉네임과 비밀번호로 언제든 다시 들어올 수 있어요.', logout:'로그아웃'},
-    friends:{unknown:'이름 모름', title:'친구', myCode:'내 친구 코드', share:'내 코드 보내기', copy:'코드 복사', add:'추가', codePh:'친구 코드', none:'아직 친구가 없어요. 친구 코드를 주고받아 추가하세요.', invite:'대결 신청', busy:'게임 중', off:'오프라인', added:'{name} 님을 추가했어요', addedCode:'친구를 추가했어요', already:'이미 추가된 친구예요', selfCode:'내 코드는 추가할 수 없어요', badCode:'코드가 올바르지 않아요', removed:'친구를 삭제했어요', removeAsk:'이 친구를 삭제할까요?'},
+    friends:{unknown:'이름 모름', title:'친구', openOn:'친구 {n}명 접속 중 — 대결 신청하기', openOff:'친구 목록 열기', myCode:'내 친구 코드', share:'내 코드 보내기', copy:'코드 복사', add:'추가', codePh:'친구 코드', none:'아직 친구가 없어요. 친구 코드를 주고받아 추가하세요.', invite:'대결 신청', busy:'게임 중', off:'오프라인', added:'{name} 님을 추가했어요', addedCode:'친구를 추가했어요', already:'이미 추가된 친구예요', selfCode:'내 코드는 추가할 수 없어요', badCode:'코드가 올바르지 않아요', removed:'친구를 삭제했어요', removeAsk:'이 친구를 삭제할까요?'},
     invite:{incoming:'{name} 님이 대결을 신청했어요', accept:'수락', decline:'거절', waiting:'{name} 님의 응답을 기다리는 중', cancel:'취소', declined:'{name} 님이 거절했어요', gone:'신청이 만료됐어요'},
     leaveAsk:{title:'게임에서 나갈까요?', body:'나가면 게임이 즉시 끝나고 상대가 승리합니다. 잠시 자리를 비우는 거라면 그냥 창을 닫았다가 다시 들어오세요. 판은 그대로 남아 있어요.', yes:'나가고 게임 끝내기', no:'계속하기'},
     oppGone:'{name} 님의 연결이 끊겼어요. 기다리는 중…', claimWin:'기다리지 않고 승리하기',
@@ -721,7 +803,7 @@ var I18N = {
       }},
     roomTitle:'Jugar con un código de sala', roomHint:'Para jugar con alguien que no está en tu lista.',
     auth:{title:'Entrar / Registrarse', nick:'Apodo', pass:'Contraseña', go:'Entrar', hint:'Si es tu primera vez, escribe el apodo y la contraseña que quieras: con eso queda creada la cuenta. Podrás volver a entrar con los mismos datos.', logout:'Salir de la cuenta'},
-    friends:{unknown:'Sin nombre', title:'Amigos', myCode:'Mi código de amigo', share:'Enviar mi código', copy:'Copiar código', add:'Añadir', codePh:'Código de amigo', none:'Todavía no tienes amigos. Intercambia códigos para añadirlos.', invite:'Retar', busy:'Jugando', off:'Desconectado', added:'{name} añadido', addedCode:'Amigo añadido', already:'Ese amigo ya está en la lista', selfCode:'No puedes añadir tu propio código', badCode:'Ese código no es válido', removed:'Amigo eliminado', removeAsk:'¿Eliminar a este amigo?'},
+    friends:{unknown:'Sin nombre', title:'Amigos', openOn:'{n} amigo(s) conectado(s) — retar', openOff:'Abrir la lista de amigos', myCode:'Mi código de amigo', share:'Enviar mi código', copy:'Copiar código', add:'Añadir', codePh:'Código de amigo', none:'Todavía no tienes amigos. Intercambia códigos para añadirlos.', invite:'Retar', busy:'Jugando', off:'Desconectado', added:'{name} añadido', addedCode:'Amigo añadido', already:'Ese amigo ya está en la lista', selfCode:'No puedes añadir tu propio código', badCode:'Ese código no es válido', removed:'Amigo eliminado', removeAsk:'¿Eliminar a este amigo?'},
     invite:{incoming:'{name} te reta a una partida', accept:'Aceptar', decline:'Rechazar', waiting:'Esperando la respuesta de {name}', cancel:'Cancelar', declined:'{name} ha rechazado', gone:'La invitación ha caducado'},
     leaveAsk:{title:'¿Salir de la partida?', body:'Si sales, la partida termina de inmediato y gana tu rival. Si solo te ausentas un momento, cierra la ventana y vuelve a entrar: la partida sigue esperándote.', yes:'Salir y terminar', no:'Seguir jugando'},
     oppGone:'{name} ha perdido la conexión. Esperando…', claimWin:'Ganar sin esperar más',
@@ -779,7 +861,7 @@ var I18N = {
       }},
     roomTitle:'Play with a room code', roomHint:'For someone who is not on your friend list.',
     auth:{title:'Sign in / Sign up', nick:'Nickname', pass:'Password', go:'Sign in', hint:'First time? Type any nickname and password and the account is created. The same pair signs you back in later.', logout:'Sign out'},
-    friends:{unknown:'Name unknown', title:'Friends', myCode:'My friend code', share:'Send my code', copy:'Copy code', add:'Add', codePh:'Friend code', none:'No friends yet. Swap friend codes to add one.', invite:'Challenge', busy:'In a game', off:'Offline', added:'{name} added', addedCode:'Friend added', already:'That friend is already on the list', selfCode:'You cannot add your own code', badCode:'That code is not valid', removed:'Friend removed', removeAsk:'Remove this friend?'},
+    friends:{unknown:'Name unknown', title:'Friends', openOn:'{n} online — challenge someone', openOff:'Open the friend list', myCode:'My friend code', share:'Send my code', copy:'Copy code', add:'Add', codePh:'Friend code', none:'No friends yet. Swap friend codes to add one.', invite:'Challenge', busy:'In a game', off:'Offline', added:'{name} added', addedCode:'Friend added', already:'That friend is already on the list', selfCode:'You cannot add your own code', badCode:'That code is not valid', removed:'Friend removed', removeAsk:'Remove this friend?'},
     invite:{incoming:'{name} challenges you to a game', accept:'Accept', decline:'Decline', waiting:'Waiting for {name} to answer', cancel:'Cancel', declined:'{name} declined', gone:'The invitation expired'},
     leaveAsk:{title:'Leave the game?', body:'Leaving ends the game immediately and your opponent wins. If you are only stepping away, just close the window and come back: the game will be waiting.', yes:'Leave and end it', no:'Keep playing'},
     oppGone:'{name} lost connection. Waiting…', claimWin:'Take the win instead of waiting',
@@ -819,12 +901,14 @@ function setLang(l){
   $('authPass').placeholder = t('auth.pass');
   $('friendCode').placeholder = t('friends.codePh');
   if (account) paintHome();
-  $('langBtn').textContent = l.toUpperCase();
+  $('langBtn').textContent = $('langOpen').textContent = l.toUpperCase();
+  $('friendsBtn').setAttribute('aria-label', t('friends.title'));
+  $('friendsClose').setAttribute('aria-label', t('close'));
   if ($('soundBtn')) paintSound();
   var lp = $('langPick'); lp.innerHTML = '';
   Object.keys(LANG_NAMES).forEach(function(k){
     var b = document.createElement('button'); b.textContent = LANG_NAMES[k]; b.className = k === l ? 'on' : '';
-    b.onclick = function(){ setLang(k); render(); };
+    b.onclick = function(){ lp.hidden = true; setLang(k); render(); };
     lp.appendChild(b);
   });
   var rl = $('rulesList'); rl.innerHTML = '';
@@ -854,6 +938,7 @@ function toast(msg, info){
 }
 var screenNow = 'lobby';
 function show(id){
+  if (id !== 'lobby') closeFriends(true);
   ['lobby','wait','direct','game'].forEach(function(s){ $(s).classList.toggle('on', s === id); });
   $('actionbar').hidden = id !== 'game';
   window.scrollTo(0, 0);
@@ -866,7 +951,7 @@ function show(id){
 
 /* ---------------- The phone's back button ---------------- */
 // Back should step out of whatever is open, not close the app.
-var OVERLAYS = ['sheet', 'discard', 'nobleDlg', 'pass', 'over', 'rulesDlg', 'inviteIn', 'inviteOut', 'leaveDlg'];
+var OVERLAYS = ['sheet', 'discard', 'nobleDlg', 'pass', 'over', 'rulesDlg', 'friendsDrawer', 'inviteIn', 'inviteOut', 'leaveDlg'];
 function topOverlay(){
   for (var i = OVERLAYS.length - 1; i >= 0; i--) {
     var el = $(OVERLAYS[i]);
@@ -879,6 +964,8 @@ window.addEventListener('popstate', function(){
   if (open) {
     // These must be answered rather than dismissed.
     if (open === 'discard' || open === 'nobleDlg' || open === 'over') { guardBack(); return; }
+    // The drawer put the entry there itself, so let this press consume it.
+    if (open === 'friendsDrawer') { closeFriends(true); return; }
     if (open === 'sheet') closeSheet();
     else if (open === 'inviteIn') $('inviteDeclineBtn').click();
     else if (open === 'inviteOut') $('inviteCancelBtn').click();
@@ -2164,12 +2251,40 @@ function paintHome(){
   if (inAcc) hasServer = true;
   $('authPanel').hidden = inAcc || !hasServer;
   $('homePanel').hidden = !inAcc;
+  $('friendsBtn').hidden = !inAcc;
+  $('topWho').textContent = inAcc ? account.name : '';
   if (inAcc) {
     $('homeName').textContent = account.name;
     $('homeCode').textContent = prettyCode(account.userId);
-  }
+  } else closeFriends();
   paintFriends();
 }
+
+/* ---- the friends drawer ---- */
+// Opening it adds a history entry so the phone's back button closes the drawer
+// rather than the page; closing it any other way gives that entry back.
+var drawerGuard = false;
+function openFriends(){
+  if (!account) return;
+  $('langPick').hidden = true;
+  $('friendsDrawer').hidden = false;
+  if (!drawerGuard) { drawerGuard = true; guardBack(); }
+  paintFriends();
+}
+function closeFriends(fromBack){
+  if ($('friendsDrawer').hidden) return;
+  $('friendsDrawer').hidden = true;
+  var owed = drawerGuard;
+  drawerGuard = false;
+  if (owed && !fromBack) { try { history.back(); } catch (e) {} }
+}
+$('openFriendsBtn').onclick = openFriends;
+$('friendsBtn').onclick = function(){ $('friendsDrawer').hidden ? openFriends() : closeFriends(); };
+$('friendsClose').onclick = $('friendsScrim').onclick = function(){ closeFriends(); };
+$('langOpen').onclick = function(e){ e.stopPropagation(); $('langPick').hidden = !$('langPick').hidden; };
+document.addEventListener('click', function(e){
+  if (!$('langPick').hidden && !$('langPick').contains(e.target)) $('langPick').hidden = true;
+});
 function myCodeText(){
   return t('friends.myCode') + ': ' + prettyCode(account ? account.userId : '') + '\n' + location.origin + location.pathname;
 }
@@ -2214,6 +2329,11 @@ $('friendCode').addEventListener('input', function(){
 });
 function paintFriends(){
   var box = $('friendList'); if (!box) return;
+  var live = friends.filter(function(f){ return onlineIds.indexOf(f.id) >= 0; }).length;
+  $('friendsBadge').hidden = !live;
+  $('friendsBadge').textContent = live;
+  $('openFriendsBtn').textContent = live ? t('friends.openOn', { n: live }) : t('friends.openOff');
+  $('openFriendsBtn').classList.toggle('primary', !!live);
   box.innerHTML = '';
   if (!friends.length) { box.appendChild(el('div', 'empty-note', t('friends.none'))); return; }
   friends.forEach(function(f){
@@ -2556,8 +2676,9 @@ function offerServerFeatures(ok){
   }
   paintHome();
   ok = hasServer;
-  // Without a server, swapping invite codes by hand is the only way to reach a friend.
-  $('directPanel').hidden = false;
+  // Swapping connection codes by hand is what you do when there is no server;
+  // with one, friends and room codes do the same job without the clutter.
+  $('directPanel').hidden = hasServer;
   if (!ok) return;
   if (account) connect();
   if (params.get('room')) {
