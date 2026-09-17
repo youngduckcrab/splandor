@@ -89,5 +89,38 @@ langs.forEach((l) => {
   });
 });
 
+// Every key the markup or the code actually asks for must exist. Comparing the
+// languages against each other cannot catch a key that no language defines.
+function resolves(lang, key) {
+  return key.split('.').reduce(function (o, part) {
+    return (o && typeof o === 'object') ? o[part] : undefined;
+  }, I18N[lang]) !== undefined;
+}
+const asked = new Set();
+(html.match(/data-i18n="([^"]+)"/g) || []).forEach(function (m) {
+  asked.add(m.slice(11, -1));
+});
+// Only static calls: t('a.b'). Keys built by concatenation are checked by their prefix below.
+(html.match(/\bt\('([A-Za-z][A-Za-z0-9.]*)'\s*[),]/g) || []).forEach(function (m) {
+  asked.add(m.replace(/.*'([^']+)'.*/, '$1'));
+});
+const unresolved = [];
+asked.forEach(function (key) {
+  langs.forEach(function (l) {
+    if (!resolves(l, key)) unresolved.push(l + ' cannot resolve t("' + key + '")');
+  });
+});
+assert.deepStrictEqual(unresolved, [], 'every key the interface asks for exists:\n  ' + unresolved.join('\n  '));
+
+// Families built by concatenation (t('err.' + code), t('colors.' + c), t('log.' + type))
+// must at least exist as tables with matching shapes.
+['err', 'colors', 'log'].forEach(function (family) {
+  const shape = Object.keys(I18N.en[family]).sort();
+  langs.forEach(function (l) {
+    assert.deepStrictEqual(Object.keys(I18N[l][family]).sort(), shape, l + '.' + family + ' matches');
+  });
+});
+
 console.log('i18n ok:', all.size, 'strings x', langs.length, 'languages;',
+  asked.size, 'keys referenced by the page all resolve;',
   stepIds.length, 'tutorial steps,', actingIds.length, 'of them hands-on');
