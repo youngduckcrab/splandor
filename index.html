@@ -296,9 +296,15 @@ body.tight .wallet .cell{padding:2px 0}
 .bankt.s2 .big{box-shadow:inset 0 -8px 12px rgba(0,0,0,.35),inset 0 0 0 1px rgba(0,0,0,.45),0 0 0 2px rgba(214,168,78,.55),0 3px 0 -1px rgba(0,0,0,.55),0 6px 9px rgba(0,0,0,.5)}
 .bankt.s0 .big{opacity:.28;box-shadow:inset 0 0 0 1px rgba(0,0,0,.4),0 0 0 1px rgba(214,168,78,.25)}
 
+/* The bar holds its height whether it is showing a hint or a row of buttons.
+   It is what the table is measured against, so a gem picked up must not move it. */
 .actionbar{position:fixed;left:0;right:0;bottom:0;padding:10px var(--gutter) calc(10px + env(safe-area-inset-bottom,0px));background:linear-gradient(180deg,rgba(18,15,22,0),var(--ground) 35%);
-  display:flex;gap:8px;justify-content:flex-end;align-items:center;pointer-events:none}
-.actionbar>*{pointer-events:auto}
+  display:flex;gap:8px;justify-content:flex-end;align-items:center;pointer-events:none;
+  min-height:calc(64px + env(safe-area-inset-bottom,0px))}
+.actionbar .btn{min-height:44px}
+/* Only the buttons take taps. The hint and the held gems are there to be read,
+   and the bar now reaches far enough up to swallow a tap on the table. */
+.actionbar button{pointer-events:auto}
 .actionbar .hint{margin-right:auto;font-size:12px;color:var(--ink-2)}
 /* The gems currently in your hand, before you commit to taking them. */
 .held{display:inline-flex;align-items:center;gap:-6px;margin-right:auto;padding:4px 8px;border-radius:999px;
