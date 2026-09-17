@@ -126,6 +126,12 @@ h1,h2,h3{font-family:var(--display);font-weight:700;margin:0;text-wrap:balance;l
   border:1px solid transparent;font-size:14px}
 .lang.menu button.on{background:rgba(214,168,78,.10);border-color:var(--line-soft)}
 
+/* How hard the computer plays, chosen before the game rather than inside it. */
+.levels{display:flex;gap:6px;margin-top:-5px;padding-inline:12px}
+.levels button{flex:1;min-height:34px;border-radius:9px;border:1px solid var(--line-soft);
+  color:var(--ink-3);font-size:13px;background:rgba(0,0,0,.18)}
+.levels button.on{border-color:var(--gold);color:var(--gold-2);background:rgba(214,168,78,.10);font-weight:600}
+
 /* Friends live in a drawer instead of a third panel on the main screen. */
 .drawer{position:fixed;inset:0;z-index:30;display:flex;justify-content:flex-end}
 .drawer .scrim{position:absolute;inset:0;background:rgba(8,6,12,.62);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
@@ -143,8 +149,9 @@ h1,h2,h3{font-family:var(--display);font-weight:700;margin:0;text-wrap:balance;l
 .drawer .code-panel .whoami{align-items:flex-start}
 
 @media (max-height:900px){
-  #lobby{gap:13px;padding-block:60px 18px}
+  #lobby{gap:11px;padding-block:58px 16px}
   #lobby .panel{padding:13px;gap:9px}
+  #lobby .levels button{min-height:30px;font-size:12px}
   .brand .emblem{width:72px;height:72px}
   .brand h1{font-size:30px}
   .brand p{font-size:14px}
@@ -156,6 +163,7 @@ h1,h2,h3{font-family:var(--display);font-weight:700;margin:0;text-wrap:balance;l
   .brand h1{font-size:25px}
   .brand p,.brand .gems{display:none}
   #authPanel .note{font-size:11px}
+  #lobby .panel{padding:11px;gap:8px}
 }
 
 /* ---------- Waiting / direct ---------- */
@@ -497,6 +505,7 @@ body.tut-on .actionbar{z-index:23}
     <button class="btn primary" id="resumeBtn" data-i18n="resume" hidden></button>
     <button class="btn" id="tutBtn" data-i18n="tut.btn"></button>
     <button class="btn" id="botBtn" data-i18n="playBot"></button>
+    <div class="levels" id="levelPick"></div>
     <button class="btn" id="localBtn" data-i18n="local"></button>
   </div>
   <div class="panel" id="directPanel">
@@ -759,6 +768,7 @@ var I18N = {
     oppGone:'{name} 님의 연결이 끊겼어요. 기다리는 중…', claimWin:'기다리지 않고 승리하기',
     overLeft:'{name} 님이 나가서 승리했어요', overYouLeft:'게임에서 나갔어요', overAbandoned:'상대가 돌아오지 않아 승리했어요',
     backInGame:'진행 중이던 게임으로 돌아왔어요',
+    diff:{easy:'쉬움', normal:'보통', hard:'어려움'},
     soundOn:'소리 켜짐', soundOff:'소리 꺼짐', playBot:'컴퓨터와 대결', resume:'하던 판 이어하기', directOnline:'서버 접속 중', reconnectBtn:'다시 연결', peerLost:'친구와의 연결이 끊겼어요',
     direct:{title:'서버 없이 친구와 직접 연결', intro:'초대 코드를 메신저로 주고받으면 두 폰이 바로 연결돼요. 방을 만드는 쪽이 코드 1개, 참가하는 쪽이 코드 1개를 보내면 끝.',
       host:'초대 코드 만들기 (내가 방장)', guest:'초대 코드 받았어요 (참가)', paste:'붙여넣기', copy:'코드 복사',
@@ -819,6 +829,7 @@ var I18N = {
     oppGone:'{name} ha perdido la conexión. Esperando…', claimWin:'Ganar sin esperar más',
     overLeft:'{name} se ha ido: ganas tú', overYouLeft:'Has salido de la partida', overAbandoned:'Tu rival no volvió: ganas tú',
     backInGame:'Has vuelto a la partida en curso',
+    diff:{easy:'Fácil', normal:'Normal', hard:'Difícil'},
     soundOn:'Sonido activado', soundOff:'Sonido desactivado', playBot:'Jugar contra la máquina', resume:'Continuar la partida', directOnline:'Con servidor', reconnectBtn:'Reconectar', peerLost:'Se perdió la conexión con tu amigo',
     direct:{title:'Conexión directa sin servidor', intro:'Intercambien un código por mensajería y los dos teléfonos se conectan. Quien crea la sala envía un código y quien se une responde con otro.',
       host:'Crear código de invitación (anfitrión)', guest:'Tengo un código (unirme)', paste:'Pegar', copy:'Copiar código',
@@ -879,6 +890,7 @@ var I18N = {
     oppGone:'{name} lost connection. Waiting…', claimWin:'Take the win instead of waiting',
     overLeft:'{name} left, so you win', overYouLeft:'You left the game', overAbandoned:'Your opponent never came back, so you win',
     backInGame:'You are back in the game that was running',
+    diff:{easy:'Easy', normal:'Normal', hard:'Hard'},
     soundOn:'Sound on', soundOff:'Sound off', playBot:'Play the computer', resume:'Resume game', directOnline:'With server', reconnectBtn:'Reconnect', peerLost:'Lost the connection to your friend',
     direct:{title:'Direct connection, no server', intro:'Swap one code each over a messenger and the two phones connect directly. The host sends one code, the guest replies with one.',
       host:'Make an invite code (host)', guest:'I have a code (join)', paste:'Paste', copy:'Copy code',
@@ -915,6 +927,7 @@ function setLang(l){
   if (account) paintHome();
   $('langBtn').textContent = $('langOpen').textContent = l.toUpperCase();
   $('friendsBtn').setAttribute('aria-label', t('friends.title'));
+  paintLevels();
   $('friendsClose').setAttribute('aria-label', t('close'));
   if ($('soundBtn')) paintSound();
   var lp = $('langPick'); lp.innerHTML = '';
@@ -939,7 +952,8 @@ var sheetCard = null;     // {card, from:'board'|'reserved'}
 var ret = null;           // discard selection
 var ws = null, reconnectTimer = null, backoff = 1000, pendingOpen = null;
 var isArtifact = !!(window.claude && window.claude.use);
-var bot = false;          // local mode against a simple computer player (tutorial)
+var bot = false;          // local mode against the computer
+var botLevel = 'normal';  // 'easy' | 'normal' | 'hard', remembered on this device
 var tut = { on: false, step: 0, seq: 0, side: null, cardId: null, reserveId: null, pairColor: null, boughtColor: null, rigged: false, oppDid: null, oppMoved: false };
 var endPlayed = false, lastRoundShown = false;
 
@@ -1683,7 +1697,7 @@ function act(action){
 function saveLocal(){
   try {
     if (mode === 'local' && localState && localState.phase !== 'over')
-      localStorage.setItem('splendor.local', JSON.stringify({ state: localState, bot: bot, seat: seat, at: Date.now(), tut: tut.on }));
+      localStorage.setItem('splendor.local', JSON.stringify({ state: localState, bot: bot, level: botLevel, seat: seat, at: Date.now(), tut: tut.on }));
     else localStorage.removeItem('splendor.local');
   } catch(e){}
 }
@@ -1691,7 +1705,7 @@ function loadLocal(){ try { return JSON.parse(localStorage.getItem('splendor.loc
 function refreshResume(){ var sv = loadLocal(); $('resumeBtn').hidden = !(sv && sv.state && sv.state.phase !== 'over'); }
 function resumeLocal(sv){
   if (!sv) return false;
-  mode = 'local'; bot = !!sv.bot; localState = sv.state; seat = bot ? 0 : localState.current;
+  mode = 'local'; bot = !!sv.bot; botLevel = sv.level || 'normal'; localState = sv.state; seat = bot ? 0 : localState.current;
   view = null; sel = []; ret = null; meta = { code: null, players: [], rematch: [] };
   show('game'); applyView(S.viewFor(localState, seat));
   if (bot && localState.current === 1) setTimeout(botTurn, botPause());
@@ -1701,40 +1715,138 @@ $('resumeBtn').onclick = function(){ resumeLocal(loadLocal()); };
 $('passBtn').onclick = function(){ $('pass').hidden = true; };
 
 /* ---------------- Local mode ---------------- */
-function startLocal(withBot){
+var LEVELS = ['easy', 'normal', 'hard'];
+function pickedLevel(){
+  try { var v = localStorage.getItem('splendor.level'); if (LEVELS.indexOf(v) >= 0) return v; } catch (e) {}
+  return 'normal';
+}
+function botName(){ return t('tut.bot') + ' \u00b7 ' + t('diff.' + botLevel); }
+// Three chips under the button they belong to, so the choice is made before the game
+// starts rather than in a dialog on the way there.
+function paintLevels(){
+  var box = $('levelPick'); if (!box) return;
+  var now = pickedLevel();
+  box.innerHTML = '';
+  LEVELS.forEach(function(k){
+    var b = el('button', k === now ? 'on' : null, t('diff.' + k));
+    b.setAttribute('aria-pressed', k === now ? 'true' : 'false');
+    b.onclick = function(){
+      try { localStorage.setItem('splendor.level', k); } catch (e) {}
+      paintLevels();
+      if (window.FX) FX.play('tick', { level: 0.5 });
+    };
+    box.appendChild(b);
+  });
+}
+function startLocal(withBot, level){
   mode = 'local'; bot = !!withBot;
+  botLevel = bot ? (level || 'normal') : 'normal';
   var n = $('name').value.trim();
-  localState = S.newGame([n || t('p1'), bot ? t('tut.bot') : t('p2')]);
+  localState = S.newGame([n || t('p1'), bot ? botName() : t('p2')]);
   seat = 0; view = null; sel = []; ret = null; meta = { code: null, players: [], rematch: [] };
   show('game'); applyView(S.viewFor(localState, 0)); saveLocal();
 }
 $('localBtn').onclick = function(){ endTut(); startLocal(false); };
-$('tutBtn').onclick = function(){ startLocal(true); startTut(); };
-$('botBtn').onclick = function(){ endTut(); startLocal(true); };
+// The tutorial always faces the middle opponent, whatever is picked for a real game.
+$('tutBtn').onclick = function(){ startLocal(true, 'normal'); startTut(); };
+$('botBtn').onclick = function(){ endTut(); startLocal(true, pickedLevel()); };
 
-/* ---------------- Computer opponent (tutorial) ---------------- */
-function botAction(s){
-  var p = s.players[1], c, i, tier;
-  if (s.phase === 'discard') {
-    var excess = S.sum(p.tokens) - S.MAX_TOKENS, give = { w: 0, u: 0, g: 0, r: 0, k: 0, y: 0 };
-    var order = S.COLORS.slice().sort(function(a, b){ return p.tokens[b] - p.tokens[a]; });
-    for (i = 0; i < order.length && excess > 0; i++) { var n = Math.min(excess, p.tokens[order[i]]); give[order[i]] = n; excess -= n; }
-    if (excess > 0) give.y = excess;
-    return { type: 'discard', tokens: give };
-  }
-  if (s.phase === 'noble') return { type: 'noble', nobleId: s.pendingNobles[0] };
-  var best = null, bestScore = -1;
+/* ---------------- Computer opponent ---------------- */
+// Three opponents share one body. `normal` is the player the tutorial has always
+// faced: buy the best card you can, otherwise walk towards the cheapest one.
+// `easy` is distractible and thrifty; `hard` reads the nobles, the market and
+// what you are about to buy.
+
+// Every card the computer could pay for, on the table or in its own hand.
+function botPool(s, p){
   var pool = [];
-  for (tier = 1; tier <= 3; tier++) s.board[tier].forEach(function(id){ if (id) pool.push(S.CARD_BY_ID[id]); });
+  for (var tier = 1; tier <= 3; tier++)
+    s.board[tier].forEach(function(id){ if (id) pool.push(S.CARD_BY_ID[id]); });
   p.reserved.forEach(function(r){ pool.push(S.CARD_BY_ID[r.id]); });
-  pool.forEach(function(card){ if (S.canAfford(p, card)) { var sc = card.pts * 10 + card.tier; if (sc > bestScore) { bestScore = sc; best = card; } } });
+  return pool;
+}
+// What is still missing for a card, and which colours those are.
+function botShort(p, card){
+  var b = S.bonuses(p), short = 0, cols = [];
+  S.COLORS.forEach(function(c){
+    var d = Math.max(0, (card.cost[c] || 0) - b[c] - p.tokens[c]);
+    if (d > 0) { short += d; cols.push(c); }
+  });
+  return { short: Math.max(0, short - p.tokens.y), cols: cols, raw: short };
+}
+function botDiscard(s, p, keep){
+  var excess = S.sum(p.tokens) - S.MAX_TOKENS, give = { w: 0, u: 0, g: 0, r: 0, k: 0, y: 0 };
+  // Spend what the plan does not need first; gold is the last thing to let go of.
+  var order = S.COLORS.slice().sort(function(a, b){
+    var ka = keep.indexOf(a) >= 0 ? 1 : 0, kb = keep.indexOf(b) >= 0 ? 1 : 0;
+    return (ka - kb) || (p.tokens[b] - p.tokens[a]);
+  });
+  for (var i = 0; i < order.length && excess > 0; i++) {
+    var n = Math.min(excess, p.tokens[order[i]]);
+    give[order[i]] = n; excess -= n;
+  }
+  if (excess > 0) give.y = excess;
+  return { type: 'discard', tokens: give };
+}
+
+// When the plan runs out: buying beats holding, holding beats taking gems you
+// will have to give back, and only a table with no move at all is a pass.
+function botFallback(s, p){
+  var pool = botPool(s, p), i, tier;
+  for (i = 0; i < pool.length; i++) if (S.canAfford(p, pool[i])) return { type: 'buy', cardId: pool[i].id };
+  if (p.reserved.length < S.MAX_RESERVED)
+    for (tier = 3; tier >= 1; tier--) if (s.decks[tier].length) return { type: 'reserve', tier: tier };
+  var open = S.COLORS.filter(function(c){ return s.bank[c] > 0; });
+  if (open.length) return { type: 'take', colors: open.slice(0, 3) };
+  return { type: 'pass' };
+}
+
+/* ---- easy: plays for the gem in front of it ---- */
+function botEasy(s){
+  var p = s.players[1], i;
+  if (s.phase === 'discard') return botDiscard(s, p, []);
+  if (s.phase === 'noble') return { type: 'noble', nobleId: s.pendingNobles[0] };
+  var pool = botPool(s, p);
+  var afford = pool.filter(function(c){ return S.canAfford(p, c); });
+  // It buys, but it buys the cheapest thing rather than the best, and now and
+  // then it is too busy collecting gems to notice it could buy at all.
+  if (afford.length && Math.random() > 0.25) {
+    var cheap = afford[0];
+    afford.forEach(function(c){
+      var sum = 0, sum2 = 0;
+      S.COLORS.forEach(function(k){ sum += c.cost[k] || 0; sum2 += cheap.cost[k] || 0; });
+      if (sum < sum2) cheap = c;
+    });
+    return { type: 'buy', cardId: cheap.id };
+  }
+  var room = S.MAX_TOKENS - S.sum(p.tokens);
+  var open = S.COLORS.filter(function(c){ return s.bank[c] > 0; });
+  for (i = open.length - 1; i > 0; i--) {   // shuffle: no plan behind the choice
+    var j = Math.floor(Math.random() * (i + 1)), t = open[i]; open[i] = open[j]; open[j] = t;
+  }
+  var pick = open.slice(0, Math.max(0, Math.min(3, room)));
+  if (pick.length) return { type: 'take', colors: pick };
+  return botFallback(s, p);
+}
+
+/* ---- normal: the opponent the tutorial teaches against ---- */
+function botNormal(s){
+  var p = s.players[1], tier;
+  if (s.phase === 'discard') return botDiscard(s, p, []);
+  if (s.phase === 'noble') return { type: 'noble', nobleId: s.pendingNobles[0] };
+  var pool = botPool(s, p);
+  var best = null, bestScore = -1;
+  pool.forEach(function(card){
+    if (!S.canAfford(p, card)) return;
+    var sc = card.pts * 10 + card.tier;
+    if (sc > bestScore) { bestScore = sc; best = card; }
+  });
   if (best) return { type: 'buy', cardId: best.id };
   // Aim at the card with the smallest shortfall and take the colors it needs.
-  var b = S.bonuses(p), target = null, targetShort = 99, needColors = [];
+  var target = null, targetShort = 99, needColors = [];
   pool.forEach(function(card){
-    var short = 0, cols = [];
-    S.COLORS.forEach(function(c){ var d = Math.max(0, (card.cost[c] || 0) - b[c] - p.tokens[c]); if (d > 0) { short += d; cols.push(c); } });
-    if (short < targetShort) { targetShort = short; target = card; needColors = cols; }
+    var sh = botShort(p, card);
+    if (sh.raw < targetShort) { targetShort = sh.raw; target = card; needColors = sh.cols; }
   });
   var room = S.MAX_TOKENS - S.sum(p.tokens);
   var pick = needColors.filter(function(c){ return s.bank[c] > 0; });
@@ -1742,8 +1854,126 @@ function botAction(s){
   S.COLORS.forEach(function(c){ if (pick.length < 3 && pick.indexOf(c) < 0 && s.bank[c] > 0) pick.push(c); });
   pick = pick.slice(0, Math.max(0, Math.min(3, room)));
   if (pick.length) return { type: 'take', colors: pick };
-  if (p.reserved.length < S.MAX_RESERVED) for (tier = 1; tier <= 3; tier++) if (s.decks[tier].length) return { type: 'reserve', tier: tier };
-  return { type: 'pass' };
+  return botFallback(s, p);
+}
+
+/* ---- hard: values a card by what it unlocks, not just by its points ---- */
+// How badly this colour is wanted by the cards on the table and by the nobles.
+// Weighted heavily on purpose: a discount that half the market wants is worth
+// more than a card with a number on it. Playing 1800 games each way against the
+// middle opponent, cheaper weights on points and a heavier one here took the
+// hard player from winning 59% of them to 67%.
+function botColorWorth(s, c){
+  var n = 0;
+  for (var tier = 1; tier <= 3; tier++)
+    s.board[tier].forEach(function(id){ if (id) n += (S.CARD_BY_ID[id].cost[c] || 0); });
+  s.nobles.forEach(function(id){ n += 2 * (S.NOBLE_BY_ID[id].req[c] || 0); });
+  return n / 2;
+}
+// One more card of this colour: how much closer does it bring a noble?
+function botNobleGain(s, p, color){
+  var b = S.bonuses(p), gain = 0;
+  s.nobles.forEach(function(id){
+    var req = S.NOBLE_BY_ID[id].req, miss = 0, helps = false;
+    S.COLORS.forEach(function(c){
+      var d = Math.max(0, (req[c] || 0) - b[c]);
+      miss += d;
+      if (c === color && d > 0) helps = true;
+    });
+    if (helps && miss <= 5) gain += (6 - miss) * 1.5;
+  });
+  return gain;
+}
+function botValue(s, p, card){
+  return card.pts * 2 + botColorWorth(s, card.color) + botNobleGain(s, p, card.color);
+}
+// Would buying this card bring a noble over at once?
+function botNobleNow(s, p, card){
+  var b = S.bonuses(p), got = false;
+  b[card.color] = (b[card.color] || 0) + 1;
+  s.nobles.forEach(function(id){
+    var req = S.NOBLE_BY_ID[id].req, ok = true;
+    S.COLORS.forEach(function(c){ if (b[c] < (req[c] || 0)) ok = false; });
+    if (ok) got = true;
+  });
+  return got;
+}
+function botHard(s){
+  var p = s.players[1], me = s.players[0], tier, best = null, bestScore = -1;
+  var pool = botPool(s, p);
+
+  if (s.phase === 'noble') {
+    // Take the noble whose colours the rest of the table still wants least of.
+    return { type: 'noble', nobleId: s.pendingNobles[0] };
+  }
+  if (s.phase === 'discard') {
+    var plan = null, planShort = 99;
+    pool.forEach(function(card){ var sh = botShort(p, card); if (sh.raw < planShort) { planShort = sh.raw; plan = card; } });
+    return botDiscard(s, p, plan ? botShort(p, plan).cols : []);
+  }
+
+  // Buy the card that is worth the most, not merely the one worth the most points.
+  pool.forEach(function(card){
+    if (!S.canAfford(p, card)) return;
+    var sc = botValue(s, p, card) + (botNobleNow(s, p, card) ? 14 : 0);
+    if (sc > bestScore) { bestScore = sc; best = card; }
+  });
+  if (best) return { type: 'buy', cardId: best.id };
+
+  // Otherwise pick the card worth the most per turn of saving, and walk to it.
+  var target = null, targetScore = -1, need = [];
+  pool.forEach(function(card){
+    var sh = botShort(p, card);
+    var turns = Math.ceil(sh.short / 2.6);
+    var sc = (botValue(s, p, card) + (botNobleNow(s, p, card) ? 14 : 0)) / (1 + turns);
+    if (sc > targetScore) { targetScore = sc; target = card; need = sh.cols; }
+  });
+
+  var room = S.MAX_TOKENS - S.sum(p.tokens);
+  // Before reaching for gems: is the human about to take something big? Reserving
+  // it takes the card away and pays a gold for the trouble.
+  if (p.reserved.length < S.MAX_RESERVED) {
+    var steal = null, stealScore = 0;
+    for (tier = 1; tier <= 3; tier++) s.board[tier].forEach(function(id){
+      if (!id) return;
+      var card = S.CARD_BY_ID[id];
+      if (!S.canAfford(me, card)) return;
+      var sc = card.pts * 4 + (botNobleNow(s, me, card) ? 12 : 0);
+      if (sc > stealScore) { stealScore = sc; steal = { id: id, tier: card.tier }; }
+    });
+    if (steal && stealScore >= 12 && room >= 1)
+      return { type: 'reserve', tier: steal.tier, cardId: steal.id };
+  }
+
+  // Two of a kind when one colour is what is really missing, three otherwise.
+  var want = need.filter(function(c){ return s.bank[c] > 0; });
+  var deep = null;
+  if (target) {
+    var b = S.bonuses(p);
+    want.forEach(function(c){
+      var d = Math.max(0, (target.cost[c] || 0) - b[c] - p.tokens[c]);
+      if (d >= 2 && s.bank[c] >= 4 && (deep === null || d > deep.d)) deep = { c: c, d: d };
+    });
+  }
+  if (deep && room >= 2) return { type: 'take', colors: [deep.c, deep.c] };
+  // Fill the rest with the colours the market wants most, so nothing is wasted.
+  var rest = S.COLORS.filter(function(c){ return s.bank[c] > 0 && want.indexOf(c) < 0; })
+    .sort(function(a, b){ return botColorWorth(s, b) - botColorWorth(s, a); });
+  var pick = want.concat(rest).slice(0, Math.max(0, Math.min(3, room)));
+  if (pick.length) return { type: 'take', colors: pick };
+
+  // Nothing worth taking: hold the card it was walking towards and pocket the gold.
+  if (p.reserved.length < S.MAX_RESERVED && target) {
+    for (tier = 1; tier <= 3; tier++) if (s.board[tier].indexOf(target.id) >= 0)
+      return { type: 'reserve', tier: tier, cardId: target.id };
+  }
+  return botFallback(s, p);
+}
+
+function botAction(s, level){
+  if (level === 'easy') return botEasy(s);
+  if (level === 'hard') return botHard(s);
+  return botNormal(s);
 }
 // The beat before the computer reaches for the table.
 function botPause(){ return 620; }
@@ -1761,14 +1991,14 @@ function botTurn(){
   // Never move on top of the previous move still sliding across the table.
   if (window.FX && FX.busy()) return setTimeout(botTurn, 220);
   var planned = null;
-  try { planned = botAction(localState); } catch (e) {}
+  try { planned = botAction(localState, botLevel); } catch (e) {}
   var wait = botThink(planned);
   if (window.FX && FX.reduced()) wait = 120;
   setTimeout(function(){ botCommit(planned); }, wait);
 }
 function botCommit(planned){
   if (!bot || !localState || localState.current !== 1 || localState.phase === 'over') return;
-  try { localState = S.apply(localState, 1, planned || botAction(localState)); }
+  try { localState = S.apply(localState, 1, planned || botAction(localState, botLevel)); }
   catch (e) { try { localState = S.apply(localState, 1, { type: 'pass' }); } catch (e2) { return; } }
   applyView(S.viewFor(localState, 0)); saveLocal();
   if (localState.current === 1 && localState.phase !== 'over') setTimeout(botTurn, botPause());
