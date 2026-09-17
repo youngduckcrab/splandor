@@ -1,11 +1,11 @@
 {
   "name": "splendor-online",
   "version": "1.0.0",
-  "description": "Splendor for two players on any phone — Korean / Spanish / English",
+  "description": "Splendor for two players on any phone: accounts, friends, reconnection. Korean / Spanish / English",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "node test/engine.test.js"
+    "test": "node test/engine.test.js && node test/online.test.js"
   },
   "engines": { "node": ">=18" },
   "dependencies": { "ws": "^8.18.0" },

@@ -74,6 +74,19 @@ h1,h2,h3{font-family:var(--display);font-weight:700;margin:0;text-wrap:balance;l
 .lang button{padding:6px 14px;border-radius:999px;border:1px solid var(--line-soft);color:var(--ink-2);font-size:13px}
 .lang button.on{border-color:var(--gold);color:var(--gold-2);background:rgba(214,168,78,.08)}
 .note{color:var(--ink-3);font-size:12px;margin:0}
+.whoami{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.who-name{font-family:var(--display);font-size:20px;color:var(--gold-2);display:block}
+.whoami .note{font-family:ui-monospace,Menlo,monospace;letter-spacing:.1em;font-size:12px}
+#homePanel{display:flex;flex-direction:column;gap:20px}
+.friend{display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:1px solid var(--line-soft)}
+.friend:last-of-type{border-bottom:0}
+.friend .dot{width:9px;height:9px;border-radius:50%;background:var(--ink-3);flex:none}
+.friend .dot.on{background:var(--ok);box-shadow:0 0 8px var(--ok)}
+.friend .fname{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.friend .fname small{display:block;color:var(--ink-3);font-size:11px;font-family:ui-monospace,Menlo,monospace}
+.friend .btn{min-height:36px;padding:0 14px}
+.friend .kill{width:32px;min-height:32px;padding:0;color:var(--ink-3);font-size:18px;line-height:1}
+.empty-note{color:var(--ink-3);font-size:13px;padding:6px 2px}
 .rule{display:flex;align-items:center;gap:10px;color:var(--gold);opacity:.7;font-size:10px}
 .rule::before,.rule::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
 
@@ -310,30 +323,55 @@ body.tut-on #game{padding-bottom:210px}
     <div class="gems"><span class="tok w"></span><span class="tok u"></span><span class="tok g"></span><span class="tok r"></span><span class="tok k"></span><span class="tok y"></span></div>
   </div>
   <div class="lang" id="langPick"></div>
-  <div class="panel">
-    <h2 data-i18n="yourName"></h2>
+
+  <!-- signed out -->
+  <div class="panel" id="authPanel">
+    <h2 data-i18n="auth.title"></h2>
     <input id="name" maxlength="16" autocomplete="nickname">
+    <input id="pass" type="password" maxlength="64" autocomplete="current-password">
+    <button class="btn primary" id="loginBtn" data-i18n="auth.go"></button>
+    <p class="note" data-i18n="auth.hint"></p>
   </div>
-  <div class="panel" id="onlinePanel">
-    <h2 data-i18n="playOnline"></h2>
-    <button class="btn" id="createBtn" data-i18n="create"></button>
-    <div class="row">
-      <input id="code" maxlength="4" autocapitalize="characters" autocomplete="off" spellcheck="false" style="text-transform:uppercase;letter-spacing:.2em;font-family:var(--display)">
-      <button class="btn" id="joinBtn" data-i18n="join"></button>
+
+  <!-- signed in -->
+  <div id="homePanel" hidden>
+    <div class="panel">
+      <div class="whoami">
+        <div><span class="who-name" id="homeName"></span><span class="note" id="homeCode"></span></div>
+        <button class="btn ghost" id="logoutBtn" data-i18n="auth.logout"></button>
+      </div>
+      <div class="row"><button class="btn" id="shareCodeBtn" data-i18n="friends.share"></button><button class="btn" id="copyCodeBtn" data-i18n="friends.copy"></button></div>
+    </div>
+    <div class="panel">
+      <h2 data-i18n="friends.title"></h2>
+      <div id="friendList"></div>
+      <div class="row">
+        <input id="friendCode" maxlength="17" autocapitalize="characters" autocomplete="off" spellcheck="false" style="letter-spacing:.12em;font-family:ui-monospace,Menlo,monospace">
+        <button class="btn" id="addFriendBtn" data-i18n="friends.add"></button>
+      </div>
+    </div>
+    <div class="panel">
+      <h2 data-i18n="roomTitle"></h2>
+      <p class="note" data-i18n="roomHint"></p>
+      <button class="btn" id="createBtn" data-i18n="create"></button>
+      <div class="row">
+        <input id="code" maxlength="4" autocapitalize="characters" autocomplete="off" spellcheck="false" style="text-transform:uppercase;letter-spacing:.2em;font-family:var(--display)">
+        <button class="btn" id="joinBtn" data-i18n="join"></button>
+      </div>
     </div>
   </div>
-  <div class="panel">
-    <h2 data-i18n="direct.title"></h2>
-    <p class="note" data-i18n="direct.intro"></p>
-    <button class="btn primary" id="hostBtn" data-i18n="direct.host"></button>
-    <button class="btn" id="guestBtn" data-i18n="direct.guest"></button>
-  </div>
+
   <div class="panel">
     <h2 data-i18n="playLocal"></h2>
     <button class="btn primary" id="resumeBtn" data-i18n="resume" hidden></button>
     <button class="btn" id="localBtn" data-i18n="local"></button>
     <button class="btn" id="tutBtn" data-i18n="tut.btn"></button>
-
+  </div>
+  <div class="panel" id="directPanel">
+    <h2 data-i18n="direct.title"></h2>
+    <p class="note" data-i18n="direct.intro"></p>
+    <button class="btn" id="hostBtn" data-i18n="direct.host"></button>
+    <button class="btn" id="guestBtn" data-i18n="direct.guest"></button>
   </div>
   <button class="btn ghost" id="rulesBtn0" data-i18n="rules"></button>
 </section>
@@ -457,6 +495,35 @@ body.tut-on #game{padding-bottom:210px}
   </div>
 </div>
 
+<div class="overlay center" id="inviteIn" hidden>
+  <div class="sheet">
+    <h3 id="inviteInText"></h3>
+    <div class="actions">
+      <button class="btn primary" id="inviteAcceptBtn" data-i18n="invite.accept"></button>
+      <button class="btn" id="inviteDeclineBtn" data-i18n="invite.decline"></button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay center" id="inviteOut" hidden>
+  <div class="sheet">
+    <h3 id="inviteOutText"></h3>
+    <p class="note"><span class="pulse"></span></p>
+    <div class="actions"><button class="btn" id="inviteCancelBtn" data-i18n="invite.cancel"></button></div>
+  </div>
+</div>
+
+<div class="overlay center" id="leaveDlg" hidden>
+  <div class="sheet">
+    <h3 data-i18n="leaveAsk.title"></h3>
+    <p class="note" data-i18n="leaveAsk.body"></p>
+    <div class="actions">
+      <button class="btn primary" id="leaveNo" data-i18n="leaveAsk.no"></button>
+      <button class="btn" id="leaveYes" data-i18n="leaveAsk.yes"></button>
+    </div>
+  </div>
+</div>
+
 <div class="overlay center" id="rulesDlg" hidden>
   <div class="sheet">
     <h3 data-i18n="rules"></h3>
@@ -489,7 +556,7 @@ var I18N = {
     p1:'플레이어 1', p2:'플레이어 2', you:'나', pass:'{name}에게 기기를 넘겨주세요', passOk:'준비됐어요', tier:'{n}단계',
     colors:{w:'다이아몬드',u:'사파이어',g:'에메랄드',r:'루비',k:'오닉스',y:'황금'},
     log:{take:'{name}: {gems} 획득', reserve:'{name}: {tier}단계 카드 예약', reserveDeck:'{name}: {tier}단계 덱에서 비공개 예약', buy:'{name}: {color} 카드 구매 (+{pts}점)', noble:'{name}: 귀족 방문 (+3점)', discard:'{name}: 토큰 반납', pass:'{name}: 차례 넘김'},
-    err:{notYourTurn:'내 차례가 아니에요', badTake:'서로 다른 색 3개 또는 같은 색 2개만 가져올 수 있어요', needFour:'같은 색 2개는 은행에 4개 이상 있을 때만 가능해요', bankShort:'은행에 보석이 부족해요', cantAfford:'보석이 부족해요', reserveFull:'예약은 3장까지만 가능해요', roomFull:'방이 가득 찼어요', roomNotFound:'방을 찾을 수 없어요. 코드를 확인하세요', invalidAction:'할 수 없는 행동이에요', cardGone:'그 카드는 이미 없어요', deckEmpty:'덱이 비었어요', discardCount:'정확한 개수를 돌려주세요', mustDiscard:'먼저 토큰을 돌려주세요', mustChooseNoble:'먼저 귀족을 선택하세요', gameOver:'게임이 끝났어요', noServer:'서버에 연결할 수 없어요. 한 기기 모드로 플레이하세요.', nameNeeded:'이름을 입력하세요'},
+    err:{passShort:'비밀번호는 4자 이상이어야 해요', notLoggedIn:'먼저 로그인하세요', sessionExpired:'로그인이 만료됐어요. 다시 로그인하세요', friendOffline:'친구가 접속 중이 아니에요', friendBusy:'친구가 다른 게임 중이에요', alreadyPlaying:'이미 게임 중이에요', inviteGone:'신청이 만료됐어요', badFriendCode:'친구 코드가 올바르지 않아요', cannotClaim:'아직 기다려야 해요', notYourTurn:'내 차례가 아니에요', badTake:'서로 다른 색 3개 또는 같은 색 2개만 가져올 수 있어요', needFour:'같은 색 2개는 은행에 4개 이상 있을 때만 가능해요', bankShort:'은행에 보석이 부족해요', cantAfford:'보석이 부족해요', reserveFull:'예약은 3장까지만 가능해요', roomFull:'방이 가득 찼어요', roomNotFound:'방을 찾을 수 없어요. 코드를 확인하세요', invalidAction:'할 수 없는 행동이에요', cardGone:'그 카드는 이미 없어요', deckEmpty:'덱이 비었어요', discardCount:'정확한 개수를 돌려주세요', mustDiscard:'먼저 토큰을 돌려주세요', mustChooseNoble:'먼저 귀족을 선택하세요', gameOver:'게임이 끝났어요', noServer:'서버에 연결할 수 없어요. 한 기기 모드로 플레이하세요.', nameNeeded:'이름을 입력하세요'},
     tut:{btn:'튜토리얼 (컴퓨터와 연습)', skip:'그만두기', next:'다음', done:'혼자 계속하기', waitAct:'위 설명대로 해보세요', good:'잘했어요!', bot:'컴퓨터', skipStep:'이 단계 건너뛰기', steps:[
       {h:'목표', p:'카드와 귀족으로 점수를 모아 먼저 15점에 도달하세요. 누군가 15점이 되면 그 라운드를 끝까지 하고 최고 점수가 이겨요. 이 연습에서는 컴퓨터 상대와 둡니다. 상단이 상대, 하단이 나예요.'},
       {h:'보석 가져오기', p:'은행에서 서로 다른 색 보석 3개를 눌러 고르고 아래의 "가져오기"를 누르세요. 황금은 직접 가져올 수 없어요.'},
@@ -501,6 +568,14 @@ var I18N = {
       {h:'귀족', p:'귀족은 카드 색 개수 조건(예: 파랑 4 · 검정 4)을 채우면 내 차례가 끝날 때 자동으로 찾아와 3점을 줘요. 보석 토큰이 아니라 카드 색이 기준이에요.'},
       {h:'토큰 한도와 마무리', p:'토큰은 10개까지만 가질 수 있어요. 넘으면 차례 끝에 돌려줘야 해요. 이제 자유롭게 계속해서 15점을 노려보세요. 상단 ? 버튼으로 언제든 규칙을 볼 수 있어요.'}
     ]},
+    roomTitle:'방 코드로 놀기', roomHint:'친구 목록에 없는 사람과 할 때 쓰세요.',
+    auth:{title:'로그인 / 가입', nick:'닉네임', pass:'비밀번호', go:'로그인', hint:'처음이면 원하는 닉네임과 비밀번호를 넣으면 그대로 가입됩니다. 같은 닉네임과 비밀번호로 언제든 다시 들어올 수 있어요.', logout:'로그아웃'},
+    friends:{unknown:'이름 모름', title:'친구', myCode:'내 친구 코드', share:'내 코드 보내기', copy:'코드 복사', add:'추가', codePh:'친구 코드', none:'아직 친구가 없어요. 친구 코드를 주고받아 추가하세요.', invite:'대결 신청', busy:'게임 중', off:'오프라인', added:'{name} 님을 추가했어요', addedCode:'친구를 추가했어요', already:'이미 추가된 친구예요', selfCode:'내 코드는 추가할 수 없어요', badCode:'코드가 올바르지 않아요', removed:'친구를 삭제했어요', removeAsk:'이 친구를 삭제할까요?'},
+    invite:{incoming:'{name} 님이 대결을 신청했어요', accept:'수락', decline:'거절', waiting:'{name} 님의 응답을 기다리는 중', cancel:'취소', declined:'{name} 님이 거절했어요', gone:'신청이 만료됐어요'},
+    leaveAsk:{title:'게임에서 나갈까요?', body:'나가면 게임이 즉시 끝나고 상대가 승리합니다. 잠시 자리를 비우는 거라면 그냥 창을 닫았다가 다시 들어오세요. 판은 그대로 남아 있어요.', yes:'나가고 게임 끝내기', no:'계속하기'},
+    oppGone:'{name} 님의 연결이 끊겼어요. 기다리는 중…', claimWin:'기다리지 않고 승리하기',
+    overLeft:'{name} 님이 나가서 승리했어요', overYouLeft:'게임에서 나갔어요', overAbandoned:'상대가 돌아오지 않아 승리했어요',
+    backInGame:'진행 중이던 게임으로 돌아왔어요',
     soundOn:'소리 켜짐', soundOff:'소리 꺼짐', resume:'하던 판 이어하기', directOnline:'서버 접속 중', reconnectBtn:'다시 연결', peerLost:'친구와의 연결이 끊겼어요',
     direct:{title:'서버 없이 친구와 직접 연결', intro:'초대 코드를 메신저로 주고받으면 두 폰이 바로 연결돼요. 방을 만드는 쪽이 코드 1개, 참가하는 쪽이 코드 1개를 보내면 끝.',
       host:'초대 코드 만들기 (내가 방장)', guest:'초대 코드 받았어요 (참가)', paste:'붙여넣기', copy:'코드 복사',
@@ -524,7 +599,7 @@ var I18N = {
     p1:'Jugador 1', p2:'Jugador 2', you:'yo', pass:'Pásale el dispositivo a {name}', passOk:'Listo', tier:'Nivel {n}',
     colors:{w:'Diamante',u:'Zafiro',g:'Esmeralda',r:'Rubí',k:'Ónice',y:'Oro'},
     log:{take:'{name}: toma {gems}', reserve:'{name}: reserva una carta de nivel {tier}', reserveDeck:'{name}: reserva a ciegas del nivel {tier}', buy:'{name}: compra {color} (+{pts} pts)', noble:'{name}: visita de un noble (+3 pts)', discard:'{name}: devuelve fichas', pass:'{name}: pasa el turno'},
-    err:{notYourTurn:'No es tu turno', badTake:'Solo puedes tomar 3 gemas distintas o 2 iguales', needFour:'Para tomar 2 iguales debe haber al menos 4 en el banco', bankShort:'No hay suficientes gemas en el banco', cantAfford:'No tienes gemas suficientes', reserveFull:'Solo puedes reservar 3 cartas', roomFull:'La sala está llena', roomNotFound:'No se encontró la sala. Revisa el código', invalidAction:'Esa acción no es válida', cardGone:'Esa carta ya no está', deckEmpty:'El mazo está vacío', discardCount:'Devuelve exactamente la cantidad indicada', mustDiscard:'Primero devuelve fichas', mustChooseNoble:'Primero elige un noble', gameOver:'La partida terminó', noServer:'No se puede conectar con el servidor. Juega en un solo dispositivo.', nameNeeded:'Escribe tu nombre'},
+    err:{passShort:'La contraseña necesita al menos 4 caracteres', notLoggedIn:'Entra primero en tu cuenta', sessionExpired:'La sesión ha caducado. Vuelve a entrar', friendOffline:'Ese amigo no está conectado', friendBusy:'Ese amigo está en otra partida', alreadyPlaying:'Ya estás en una partida', inviteGone:'La invitación ha caducado', badFriendCode:'El código de amigo no es válido', cannotClaim:'Todavía hay que esperar', notYourTurn:'No es tu turno', badTake:'Solo puedes tomar 3 gemas distintas o 2 iguales', needFour:'Para tomar 2 iguales debe haber al menos 4 en el banco', bankShort:'No hay suficientes gemas en el banco', cantAfford:'No tienes gemas suficientes', reserveFull:'Solo puedes reservar 3 cartas', roomFull:'La sala está llena', roomNotFound:'No se encontró la sala. Revisa el código', invalidAction:'Esa acción no es válida', cardGone:'Esa carta ya no está', deckEmpty:'El mazo está vacío', discardCount:'Devuelve exactamente la cantidad indicada', mustDiscard:'Primero devuelve fichas', mustChooseNoble:'Primero elige un noble', gameOver:'La partida terminó', noServer:'No se puede conectar con el servidor. Juega en un solo dispositivo.', nameNeeded:'Escribe tu nombre'},
     tut:{btn:'Tutorial (práctica contra la máquina)', skip:'Salir', next:'Siguiente', done:'Seguir jugando', waitAct:'Haz lo que dice arriba', good:'¡Muy bien!', bot:'Máquina', skipStep:'Saltar este paso', steps:[
       {h:'Objetivo', p:'Reúne puntos con cartas y nobles hasta llegar a 15. Cuando alguien llega a 15 se termina la ronda y gana quien tenga más puntos. En esta práctica juegas contra la máquina: arriba está el rival, abajo estás tú.'},
       {h:'Tomar gemas', p:'Toca 3 gemas de colores distintos en el banco y pulsa "Tomar" abajo. El oro no se puede tomar directamente.'},
@@ -536,6 +611,14 @@ var I18N = {
       {h:'Nobles', p:'Si cumples el requisito de colores de cartas de un noble (por ejemplo, 4 azules y 4 negras), te visita automáticamente al final de tu turno y vale 3 puntos. Cuentan las cartas, no las fichas.'},
       {h:'Límite y final', p:'Solo puedes tener 10 fichas; si te pasas, devuelves el exceso al final del turno. Ahora sigue jugando libremente hasta los 15 puntos. Con el botón ? puedes ver las reglas cuando quieras.'}
     ]},
+    roomTitle:'Jugar con un código de sala', roomHint:'Para jugar con alguien que no está en tu lista.',
+    auth:{title:'Entrar / Registrarse', nick:'Apodo', pass:'Contraseña', go:'Entrar', hint:'Si es tu primera vez, escribe el apodo y la contraseña que quieras: con eso queda creada la cuenta. Podrás volver a entrar con los mismos datos.', logout:'Salir de la cuenta'},
+    friends:{unknown:'Sin nombre', title:'Amigos', myCode:'Mi código de amigo', share:'Enviar mi código', copy:'Copiar código', add:'Añadir', codePh:'Código de amigo', none:'Todavía no tienes amigos. Intercambia códigos para añadirlos.', invite:'Retar', busy:'Jugando', off:'Desconectado', added:'{name} añadido', addedCode:'Amigo añadido', already:'Ese amigo ya está en la lista', selfCode:'No puedes añadir tu propio código', badCode:'Ese código no es válido', removed:'Amigo eliminado', removeAsk:'¿Eliminar a este amigo?'},
+    invite:{incoming:'{name} te reta a una partida', accept:'Aceptar', decline:'Rechazar', waiting:'Esperando la respuesta de {name}', cancel:'Cancelar', declined:'{name} ha rechazado', gone:'La invitación ha caducado'},
+    leaveAsk:{title:'¿Salir de la partida?', body:'Si sales, la partida termina de inmediato y gana tu rival. Si solo te ausentas un momento, cierra la ventana y vuelve a entrar: la partida sigue esperándote.', yes:'Salir y terminar', no:'Seguir jugando'},
+    oppGone:'{name} ha perdido la conexión. Esperando…', claimWin:'Ganar sin esperar más',
+    overLeft:'{name} se ha ido: ganas tú', overYouLeft:'Has salido de la partida', overAbandoned:'Tu rival no volvió: ganas tú',
+    backInGame:'Has vuelto a la partida en curso',
     soundOn:'Sonido activado', soundOff:'Sonido desactivado', resume:'Continuar la partida', directOnline:'Con servidor', reconnectBtn:'Reconectar', peerLost:'Se perdió la conexión con tu amigo',
     direct:{title:'Conexión directa sin servidor', intro:'Intercambien un código por mensajería y los dos teléfonos se conectan. Quien crea la sala envía un código y quien se une responde con otro.',
       host:'Crear código de invitación (anfitrión)', guest:'Tengo un código (unirme)', paste:'Pegar', copy:'Copiar código',
@@ -559,7 +642,7 @@ var I18N = {
     p1:'Player 1', p2:'Player 2', you:'me', pass:'Hand the device to {name}', passOk:'Ready', tier:'Level {n}',
     colors:{w:'Diamond',u:'Sapphire',g:'Emerald',r:'Ruby',k:'Onyx',y:'Gold'},
     log:{take:'{name}: takes {gems}', reserve:'{name}: reserves a level {tier} card', reserveDeck:'{name}: reserves blind from level {tier}', buy:'{name}: buys {color} (+{pts} pts)', noble:'{name}: noble visit (+3 pts)', discard:'{name}: returns tokens', pass:'{name}: passes'},
-    err:{notYourTurn:'Not your turn', badTake:'Take 3 different gems or 2 of a kind', needFour:'Two of a kind needs 4 or more in the bank', bankShort:'Not enough gems in the bank', cantAfford:'Not enough gems', reserveFull:'You can reserve only 3 cards', roomFull:'Room is full', roomNotFound:'Room not found. Check the code', invalidAction:'That move is not allowed', cardGone:'That card is gone', deckEmpty:'Deck is empty', discardCount:'Return exactly the required number', mustDiscard:'Return tokens first', mustChooseNoble:'Choose a noble first', gameOver:'The game is over', noServer:'Cannot reach the server. Play on one device instead.', nameNeeded:'Enter your name'},
+    err:{passShort:'The password needs at least 4 characters', notLoggedIn:'Sign in first', sessionExpired:'Your session expired. Sign in again', friendOffline:'That friend is not online', friendBusy:'That friend is in another game', alreadyPlaying:'You are already in a game', inviteGone:'The invitation expired', badFriendCode:'That friend code is not valid', cannotClaim:'You still have to wait', notYourTurn:'Not your turn', badTake:'Take 3 different gems or 2 of a kind', needFour:'Two of a kind needs 4 or more in the bank', bankShort:'Not enough gems in the bank', cantAfford:'Not enough gems', reserveFull:'You can reserve only 3 cards', roomFull:'Room is full', roomNotFound:'Room not found. Check the code', invalidAction:'That move is not allowed', cardGone:'That card is gone', deckEmpty:'Deck is empty', discardCount:'Return exactly the required number', mustDiscard:'Return tokens first', mustChooseNoble:'Choose a noble first', gameOver:'The game is over', noServer:'Cannot reach the server. Play on one device instead.', nameNeeded:'Enter your name'},
     tut:{btn:'Tutorial (practice vs computer)', skip:'Quit', next:'Next', done:'Keep playing', waitAct:'Try what it says above', good:'Well done!', bot:'Computer', skipStep:'Skip this step', steps:[
       {h:'The goal', p:'Collect points from cards and nobles and reach 15 first. When someone hits 15 the round is finished and the highest score wins. In this practice you play the computer: opponent on top, you at the bottom.'},
       {h:'Take gems', p:'Tap 3 gems of different colors in the bank, then press "Take" below. Gold cannot be taken directly.'},
@@ -571,6 +654,14 @@ var I18N = {
       {h:'Nobles', p:'Meet a noble\'s card-color requirement (say 4 blue and 4 black) and it visits you automatically at the end of your turn for 3 points. Cards count, not tokens.'},
       {h:'Token limit and finish', p:'You can hold only 10 tokens; any excess goes back at the end of your turn. Now keep playing freely and go for 15 points. The ? button shows the rules any time.'}
     ]},
+    roomTitle:'Play with a room code', roomHint:'For someone who is not on your friend list.',
+    auth:{title:'Sign in / Sign up', nick:'Nickname', pass:'Password', go:'Sign in', hint:'First time? Type any nickname and password and the account is created. The same pair signs you back in later.', logout:'Sign out'},
+    friends:{unknown:'Name unknown', title:'Friends', myCode:'My friend code', share:'Send my code', copy:'Copy code', add:'Add', codePh:'Friend code', none:'No friends yet. Swap friend codes to add one.', invite:'Challenge', busy:'In a game', off:'Offline', added:'{name} added', addedCode:'Friend added', already:'That friend is already on the list', selfCode:'You cannot add your own code', badCode:'That code is not valid', removed:'Friend removed', removeAsk:'Remove this friend?'},
+    invite:{incoming:'{name} challenges you to a game', accept:'Accept', decline:'Decline', waiting:'Waiting for {name} to answer', cancel:'Cancel', declined:'{name} declined', gone:'The invitation expired'},
+    leaveAsk:{title:'Leave the game?', body:'Leaving ends the game immediately and your opponent wins. If you are only stepping away, just close the window and come back: the game will be waiting.', yes:'Leave and end it', no:'Keep playing'},
+    oppGone:'{name} lost connection. Waiting…', claimWin:'Take the win instead of waiting',
+    overLeft:'{name} left, so you win', overYouLeft:'You left the game', overAbandoned:'Your opponent never came back, so you win',
+    backInGame:'You are back in the game that was running',
     soundOn:'Sound on', soundOff:'Sound off', resume:'Resume game', directOnline:'With server', reconnectBtn:'Reconnect', peerLost:'Lost the connection to your friend',
     direct:{title:'Direct connection, no server', intro:'Swap one code each over a messenger and the two phones connect directly. The host sends one code, the guest replies with one.',
       host:'Make an invite code (host)', guest:'I have a code (join)', paste:'Paste', copy:'Copy code',
@@ -601,7 +692,10 @@ function setLang(l){
   document.documentElement.lang = l;
   document.querySelectorAll('[data-i18n]').forEach(function(el){ el.textContent = t(el.getAttribute('data-i18n')); });
   $('code').placeholder = t('codePh');
-  $('name').placeholder = t('yourName');
+  $('name').placeholder = t('auth.nick');
+  $('pass').placeholder = t('auth.pass');
+  $('friendCode').placeholder = t('friends.codePh');
+  if (account) paintHome();
   $('langBtn').textContent = l.toUpperCase();
   if ($('soundBtn')) paintSound();
   var lp = $('langPick'); lp.innerHTML = '';
@@ -624,7 +718,7 @@ var meta = { code: null, players: [], rematch: [] };
 var sel = [];             // gem selection for a take action
 var sheetCard = null;     // {card, from:'board'|'reserved'}
 var ret = null;           // discard selection
-var ws = null, session = null, reconnectTimer = null, backoff = 1000, pendingOpen = null;
+var ws = null, reconnectTimer = null, backoff = 1000, pendingOpen = null;
 var isArtifact = !!(window.claude && window.claude.use);
 var bot = false;          // local mode against a simple computer player (tutorial)
 var tut = { on: false, step: 0, mark: 0 };
@@ -732,7 +826,14 @@ function render(){
                  mode === 'p2p' ? p2p.connected : !!(meta.players[1 - seat] && meta.players[1 - seat].connected));
   if (waiting) banner.appendChild(el('span', 'thinking'));
   if (view.endTriggered && view.phase !== 'over') banner.appendChild(el('small', null, t('lastRound')));
-  if (mode === 'online' && meta.players[1 - seat] && !meta.players[1 - seat].connected) banner.appendChild(el('small', null, t('offline', { name: o.name })));
+  if (mode === 'online' && meta.players[1 - seat] && !meta.players[1 - seat].connected && view.phase !== 'over') {
+    banner.appendChild(el('small', null, t('oppGone', { name: o.name })));
+    if (meta.canClaim) {
+      var cb = el('button', 'btn reconnect', t('claimWin'));
+      cb.onclick = function(){ send({ t: 'claimWin' }); };
+      banner.appendChild(cb);
+    }
+  }
   if (mode === 'p2p' && !p2p.connected && view.phase !== 'over') {
     banner.appendChild(el('small', null, t('peerLost')));
     var rb = el('button', 'btn reconnect', t('reconnectBtn')); rb.onclick = function(){ p2pReconnect(); }; banner.appendChild(rb);
@@ -1171,7 +1272,16 @@ function renderNoble(){
 
 /* ---------------- Game over ---------------- */
 function renderOver(){
-  $('overText').textContent = view.winner == null ? t('draw') : t('wins', { name: view.players[view.winner].name });
+  var reason = meta.over && meta.over.reason;
+  if (reason === 'left') {
+    $('overText').textContent = meta.over.winner === seat
+      ? t('overLeft', { name: opp().name })
+      : t('overYouLeft');
+  } else if (reason === 'abandoned') {
+    $('overText').textContent = meta.over.winner === seat ? t('overAbandoned') : t('overYouLeft');
+  } else {
+    $('overText').textContent = view.winner == null ? t('draw') : t('wins', { name: view.players[view.winner].name });
+  }
   var sc = $('scores'); sc.innerHTML = '';
   view.players.forEach(function(p, i){
     var line = el('div', 'line' + (view.winner === i ? ' win' : ''));
@@ -1181,6 +1291,8 @@ function renderOver(){
   });
   var asked = mode === 'online' && meta.rematch.indexOf(seat) >= 0;
   var oppAsked = mode === 'online' && meta.rematch.indexOf(1 - seat) >= 0;
+  // A game somebody walked out of cannot be replayed from here; both go back to the lobby.
+  $('rematchBtn').hidden = mode === 'online' && !!reason;
   $('rematchBtn').disabled = asked;
   $('rematchNote').hidden = !(asked || oppAsked);
   $('rematchNote').textContent = asked ? t('rematchWait') : oppAsked ? t('rematchAsked', { name: opp().name }) : '';
@@ -1343,65 +1455,264 @@ $('tutNext').onclick = function(){
 };
 $('tutSkip').onclick = endTut;
 
-/* ---------------- Online mode ---------------- */
-function saveSession(){ try { localStorage.setItem('splendor.session', JSON.stringify(session)); } catch(e){} }
-function loadSession(){ try { return JSON.parse(localStorage.getItem('splendor.session') || 'null'); } catch(e){ return null; } }
-function clearSession(){ session = null; try { localStorage.removeItem('splendor.session'); } catch(e){} }
+/* ---------------- Account, friends and online play ---------------- */
+var account = null;      // {userId, name, token}
+var friends = [];        // [{id, name}] kept on this device only
+var onlineIds = [];
+var incoming = null;     // an invitation waiting for my answer
+var outgoing = null;     // an invitation I sent
+
+function loadJSON(key, fallback){ try { return JSON.parse(localStorage.getItem(key)) || fallback; } catch(e){ return fallback; } }
+function saveJSON(key, val){ try { localStorage.setItem(key, JSON.stringify(val)); } catch(e){} }
+function myName(){ return account ? account.name : ($('name').value.trim() || t('p1')); }
+function prettyCode(id){ return String(id || '').toUpperCase().replace(/(.{4})(?=.)/g, '$1-'); }
+function normCode(s){ return String(s || '').toLowerCase().replace(/[^0-9a-f]/g, '').slice(0, 12); }
+
 function send(msg){
   if (mode === 'p2p') { if (dc && dc.readyState === 'open') dc.send(JSON.stringify(msg)); else toast(t('peerLost')); return; }
   if (ws && ws.readyState === 1) ws.send(JSON.stringify(msg)); else toast(t('err.noServer'));
 }
-function connect(onOpen){
-  if (ws && (ws.readyState === 0 || ws.readyState === 1)) { if (ws.readyState === 1) onOpen && onOpen(); else pendingOpen = onOpen; return; }
-  pendingOpen = onOpen;
-  $('conn').hidden = false; $('conn').textContent = t(session ? 'reconnecting' : 'connecting');
+
+/* ---- connection ---- */
+function connect(onReady){
+  if (ws && ws.readyState === 1) { onReady && onReady(); return; }
+  if (ws && ws.readyState === 0) { pendingOpen = onReady; return; }
+  pendingOpen = onReady;
+  $('conn').hidden = false;
+  $('conn').textContent = t(account ? 'reconnecting' : 'connecting');
   var url = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host;
-  try { ws = new WebSocket(url); } catch (e) { $('conn').hidden = true; toast(t('err.noServer')); pendingOpen = null; return; }
+  try { ws = new WebSocket(url); }
+  catch (e) { $('conn').hidden = true; toast(t('err.noServer')); pendingOpen = null; return; }
   ws.onopen = function(){
-    $('conn').hidden = true; backoff = 1000;
+    backoff = 1000;
+    if (account && account.token) ws.send(JSON.stringify({ t: 'auth', token: account.token, name: account.name }));
+    else $('conn').hidden = true;
     var cb = pendingOpen; pendingOpen = null;
-    if (cb) cb(); else if (session) ws.send(JSON.stringify({ t: 'rejoin', code: session.code, token: session.token, name: $('name').value.trim() }));
+    if (cb) cb();
   };
   ws.onmessage = function(ev){ var m; try { m = JSON.parse(ev.data); } catch(e){ return; } onMessage(m); };
   ws.onclose = function(ev){
     ws = null;
-    if (ev.code === 4000) { clearSession(); mode = null; view = null; show('lobby'); toast(t('err.invalidAction')); return; }
-    if (mode === 'online' && session) {
-      $('conn').hidden = false; $('conn').textContent = t('reconnecting');
-      reconnectTimer = setTimeout(function(){ connect(); }, backoff); backoff = Math.min(backoff * 2, 10000);
-    } else { $('conn').hidden = true; if (pendingOpen) { pendingOpen = null; toast(t('err.noServer')); } }
+    // 4001 means this account signed in somewhere else; do not fight over the socket.
+    if (ev.code === 4001) { $('conn').hidden = true; toast(t('err.sessionExpired')); signOut(true); return; }
+    if (account) {
+      $('conn').hidden = false;
+      $('conn').textContent = t('reconnecting');
+      clearTimeout(reconnectTimer);
+      reconnectTimer = setTimeout(function(){ connect(); }, backoff);
+      backoff = Math.min(backoff * 2, 10000);
+    } else {
+      $('conn').hidden = true;
+      if (pendingOpen) { pendingOpen = null; toast(t('err.noServer')); }
+    }
   };
   ws.onerror = function(){ /* close follows */ };
 }
+
 function onMessage(m){
   switch (m.t) {
-    case 'joined':
-      mode = 'online'; seat = m.seat; meta.code = m.code;
-      session = { code: m.code, token: m.token }; saveSession();
-      history.replaceState(null, '', location.pathname);
+    case 'auth': {
+      account = { userId: m.userId, name: m.name, token: m.token };
+      saveJSON('splendor.account', account);
+      $('conn').hidden = true;
+      paintHome();
+      sendWatch();
       break;
-    case 'state':
-      meta.code = m.code; meta.players = m.players; meta.rematch = m.rematch || []; seat = m.seat;
-      if (!m.state) { $('waitCode').textContent = m.code; show('wait'); return; }
+    }
+    case 'loggedOut':
+      break;
+    case 'presence':
+      onlineIds = m.online || [];
+      paintFriends();
+      break;
+    case 'invited':
+      if (mode === 'online' && view && view.phase !== 'over') { send({ t: 'inviteDecline', from: m.from.id }); break; }
+      incoming = m.from;
+      rememberFriend(m.from.id, m.from.name);
+      $('inviteInText').textContent = t('invite.incoming', { name: m.from.name });
+      $('inviteIn').hidden = false;
+      if (window.FX) { FX.play('noble', { level: 0.8 }); FX.buzz('noble'); }
+      break;
+    case 'inviteOff':
+      if (incoming && incoming.id === m.from) { incoming = null; $('inviteIn').hidden = true; }
+      break;
+    case 'inviteSent':
+      break;
+    case 'inviteDeclined':
+      outgoing = null; $('inviteOut').hidden = true;
+      toast(t('invite.declined', { name: m.by.name }));
+      break;
+    case 'state': {
+      // The same handler serves the peer-to-peer channel, where the mode must stand.
+      if (mode !== 'p2p') mode = 'online';
+      outgoing = null; $('inviteOut').hidden = true;
+      incoming = null; $('inviteIn').hidden = true;
+      meta.code = m.room; meta.players = m.players || []; meta.rematch = m.rematch || [];
+      meta.over = m.over || null; meta.canClaim = !!m.canClaim;
+      seat = m.seat;
+      if (!m.state) { $('waitCode').textContent = m.room; show('wait'); return; }
+      var foe = meta.players[1 - m.seat];
+      if (foe && foe.id) rememberFriend(foe.id, foe.name);
+      var wasPlaying = $('game').classList.contains('on');
       var prevPhase = view && view.phase;
       sel = [];
       if (prevPhase !== 'discard' && m.state.phase !== 'discard') ret = null;
-      if (!$('game').classList.contains('on')) show('game');
+      if (!wasPlaying) { show('game'); view = null; }
       applyView(m.state);
+      if (!wasPlaying && m.state.log && m.state.log.length) toast(t('backInGame'), true);
+      break;
+    }
+    case 'left':
+      mode = null; view = null; meta = { code: null, players: [], rematch: [] };
+      $('over').hidden = true;
+      show('lobby'); paintHome();
       break;
     case 'err':
-      if (m.code === 'roomNotFound' && !view) { clearSession(); mode = null; show('lobby'); }
+      if (m.code === 'sessionExpired') { signOut(true); }
+      if (m.code === 'inviteGone') { incoming = null; $('inviteIn').hidden = true; }
+      if (m.code === 'friendOffline' || m.code === 'friendBusy' || m.code === 'alreadyPlaying') {
+        outgoing = null; $('inviteOut').hidden = true;
+      }
       toast(t('err.' + m.code));
       if (view) render();
       break;
   }
 }
-function needName(){ var n = $('name').value.trim(); if (!n) { toast(t('err.nameNeeded')); $('name').focus(); return null; } try { localStorage.setItem('splendor.name', n); } catch(e){} return n; }
-$('createBtn').onclick = function(){ var n = needName(); if (!n) return; connect(function(){ ws.send(JSON.stringify({ t: 'create', name: n })); }); };
+
+/* ---- signing in and out ---- */
+$('loginBtn').onclick = function(){
+  var n = $('name').value.trim(), pw = $('pass').value;
+  if (!n) { toast(t('err.nameNeeded')); $('name').focus(); return; }
+  if (pw.length < 4) { toast(t('err.passShort')); $('pass').focus(); return; }
+  try { localStorage.setItem('splendor.name', n); } catch(e){}
+  connect(function(){ ws.send(JSON.stringify({ t: 'login', name: n, pass: pw })); });
+};
+$('pass').addEventListener('keydown', function(e){ if (e.key === 'Enter') $('loginBtn').click(); });
+
+function signOut(silent){
+  if (ws && ws.readyState === 1 && !silent) ws.send(JSON.stringify({ t: 'logout' }));
+  account = null;
+  try { localStorage.removeItem('splendor.account'); } catch(e){}
+  clearTimeout(reconnectTimer);
+  if (ws) { var w = ws; ws = null; w.onclose = null; w.close(); }
+  onlineIds = [];
+  $('conn').hidden = true;
+  paintHome();
+}
+$('logoutBtn').onclick = function(){ signOut(false); };
+
+/* ---- home ---- */
+function paintHome(){
+  var inAcc = !!account;
+  $('authPanel').hidden = inAcc;
+  $('homePanel').hidden = !inAcc;
+  if (inAcc) {
+    $('homeName').textContent = account.name;
+    $('homeCode').textContent = prettyCode(account.userId);
+  }
+  paintFriends();
+}
+function myCodeText(){
+  return t('friends.myCode') + ': ' + prettyCode(account ? account.userId : '') + '\n' + location.origin + location.pathname;
+}
+$('shareCodeBtn').onclick = function(){
+  if (!account) return;
+  if (navigator.share) navigator.share({ text: myCodeText() }).catch(function(){});
+  else copyMyCode();
+};
+function copyMyCode(){
+  var txt = myCodeText();
+  if (navigator.clipboard) navigator.clipboard.writeText(txt).then(function(){ toast(t('copied'), true); }, function(){ prompt('', txt); });
+  else prompt('', txt);
+}
+$('copyCodeBtn').onclick = copyMyCode;
+
+/* ---- friends (kept on this device) ---- */
+function rememberFriend(id, name){
+  id = normCode(id);
+  if (!id || (account && id === account.userId)) return false;
+  var found = null;
+  for (var i = 0; i < friends.length; i++) if (friends[i].id === id) found = friends[i];
+  if (found) { if (name) { found.name = name; saveJSON('splendor.friends', friends); paintFriends(); } return false; }
+  friends.push({ id: id, name: name || '' });
+  saveJSON('splendor.friends', friends);
+  sendWatch();
+  paintFriends();
+  return true;
+}
+function sendWatch(){
+  if (ws && ws.readyState === 1 && account) ws.send(JSON.stringify({ t: 'watch', ids: friends.map(function(f){ return f.id; }) }));
+}
+$('addFriendBtn').onclick = function(){
+  var id = normCode($('friendCode').value);
+  if (id.length !== 12) { toast(t('friends.badCode')); return; }
+  if (account && id === account.userId) { toast(t('friends.selfCode')); return; }
+  if (rememberFriend(id, null)) { $('friendCode').value = ''; toast(t('friends.addedCode'), true); }
+  else toast(t('friends.already'));
+};
+$('friendCode').addEventListener('input', function(){
+  var raw = normCode(this.value);
+  this.value = prettyCode(raw);
+});
+function paintFriends(){
+  var box = $('friendList'); if (!box) return;
+  box.innerHTML = '';
+  if (!friends.length) { box.appendChild(el('div', 'empty-note', t('friends.none'))); return; }
+  friends.forEach(function(f){
+    var on = onlineIds.indexOf(f.id) >= 0;
+    var row = el('div', 'friend');
+    row.appendChild(el('span', 'dot' + (on ? ' on' : '')));
+    var nm = el('span', 'fname', f.name || t('friends.unknown'));
+    nm.appendChild(el('small', null, prettyCode(f.id)));
+    row.appendChild(nm);
+    if (on) {
+      var b = el('button', 'btn primary', t('friends.invite'));
+      b.onclick = function(){ invite(f); };
+      row.appendChild(b);
+    } else {
+      row.appendChild(el('span', 'note', t('friends.off')));
+    }
+    var kill = el('button', 'btn ghost kill', '×');
+    kill.setAttribute('aria-label', t('friends.removeAsk'));
+    kill.onclick = function(){
+      friends = friends.filter(function(x){ return x.id !== f.id; });
+      saveJSON('splendor.friends', friends); sendWatch(); paintFriends();
+      toast(t('friends.removed'), true);
+    };
+    row.appendChild(kill);
+    box.appendChild(row);
+  });
+}
+
+/* ---- invitations ---- */
+function invite(f){
+  if (!account) return;
+  outgoing = f;
+  $('inviteOutText').textContent = t('invite.waiting', { name: f.name });
+  $('inviteOut').hidden = false;
+  send({ t: 'invite', to: f.id });
+}
+$('inviteCancelBtn').onclick = function(){
+  if (outgoing) send({ t: 'inviteCancel', to: outgoing.id });
+  outgoing = null; $('inviteOut').hidden = true;
+};
+$('inviteAcceptBtn').onclick = function(){
+  if (!incoming) return;
+  if (window.FX) FX.arm();
+  send({ t: 'inviteAccept', from: incoming.id });
+  $('inviteIn').hidden = true;
+};
+$('inviteDeclineBtn').onclick = function(){
+  if (incoming) send({ t: 'inviteDecline', from: incoming.id });
+  incoming = null; $('inviteIn').hidden = true;
+};
+
+/* ---- room codes ---- */
+$('createBtn').onclick = function(){ connect(function(){ send({ t: 'create' }); }); };
 $('joinBtn').onclick = function(){
-  var n = needName(); if (!n) return;
-  var c = $('code').value.trim().toUpperCase(); if (c.length !== 4) { $('code').focus(); return; }
-  connect(function(){ ws.send(JSON.stringify({ t: 'join', code: c, name: n })); });
+  var c = $('code').value.trim().toUpperCase();
+  if (c.length !== 4) { $('code').focus(); return; }
+  connect(function(){ send({ t: 'join', code: c }); });
 };
 function inviteLink(){ return location.origin + location.pathname + '?room=' + meta.code; }
 $('shareBtn').onclick = function(){
@@ -1409,22 +1720,44 @@ $('shareBtn').onclick = function(){
   if (navigator.share) navigator.share(data).catch(function(){}); else copyLink();
 };
 function copyLink(){
-  var s = t('shareText', { code: meta.code }) + '\n' + inviteLink();
-  if (navigator.clipboard) navigator.clipboard.writeText(s).then(function(){ toast(t('copied'), true); }, function(){ prompt('', s); });
-  else prompt('', s);
+  var str = t('shareText', { code: meta.code }) + '\n' + inviteLink();
+  if (navigator.clipboard) navigator.clipboard.writeText(str).then(function(){ toast(t('copied'), true); }, function(){ prompt('', str); });
+  else prompt('', str);
 }
 $('copyBtn').onclick = copyLink;
-function leave(){
-  if (ws) { var w = ws; ws = null; w.onclose = null; w.close(); }
+
+/* ---- leaving ---- */
+// Closing the window is not leaving: the game waits. Leaving is a decision, and it ends the game.
+function leaveGame(){
+  var live = mode === 'online' && view && view.phase !== 'over' && meta.players && meta.players.length > 1;
+  if (live) { $('leaveDlg').hidden = false; return; }
+  if (mode === 'online') { send({ t: 'leave' }); return; }
+  goLobby();
+}
+$('leaveNo').onclick = function(){ $('leaveDlg').hidden = true; };
+$('leaveYes').onclick = function(){ $('leaveDlg').hidden = true; send({ t: 'leave' }); };
+
+function goLobby(){
   clearTimeout(reconnectTimer);
-  clearSession(); mode = null; view = null; localState = null; sel = []; ret = null; endTut(); bot = false; p2pClose();
+  if (mode === 'p2p') p2pClose();
+  mode = null; view = null; localState = null; sel = []; ret = null; endTut(); bot = false;
+  meta = { code: null, players: [], rematch: [] };
   try { localStorage.removeItem('splendor.local'); } catch(e){}
   refreshResume();
-  $('over').hidden = true; $('pass').hidden = true; $('conn').hidden = true;
-  show('lobby');
+  $('over').hidden = true; $('pass').hidden = true; $('leaveDlg').hidden = true;
+  if (!account) { $('conn').hidden = true; if (ws) { var w = ws; ws = null; w.onclose = null; w.close(); } }
+  show('lobby'); paintHome();
 }
-$('leaveBtn').onclick = leave; $('leaveWaitBtn').onclick = leave; $('leaveDirectBtn').onclick = leave;
-
+function leave(){ leaveGame(); }
+$('leaveBtn').onclick = leaveGame;
+$('leaveWaitBtn').onclick = function(){ if (mode === 'online') send({ t: 'leave' }); else goLobby(); };
+$('leaveDirectBtn').onclick = goLobby;
+function needName(){
+  var n = account ? account.name : $('name').value.trim();
+  if (!n) { toast(t('err.nameNeeded')); $('name').focus(); return null; }
+  try { localStorage.setItem('splendor.name', n); } catch(e){}
+  return n;
+}
 
 /* ---------------- Direct connection (WebRTC data channel, codes swapped by hand) ---------------- */
 var ICE = { iceServers: [
@@ -1625,27 +1958,46 @@ document.addEventListener('keydown', function(e){ if (e.key === 'Escape') { clos
 if (window.Art) $('emblem').innerHTML = Art.emblem();
 setLang(lang);
 try { $('name').value = localStorage.getItem('splendor.name') || ''; } catch(e){}
+friends = loadJSON('splendor.friends', []);
+account = loadJSON('splendor.account', null);
 var params = new URLSearchParams(location.search);
 refreshResume();
-$('onlinePanel').hidden = true;
+paintHome();
+
+// Accounts, friends and rooms all need the server behind this page. On a static
+// host there is none, so ask once and only offer what actually works.
+var hasServer = false;
 function probeServer(){
-  if (isArtifact || location.protocol === 'file:') return;
-  var done = false, to = setTimeout(function(){ done = true; }, 2500);
+  if (isArtifact || location.protocol === 'file:') { offerServerFeatures(false); return; }
+  var settled = false;
+  var to = setTimeout(function(){ if (!settled) { settled = true; offerServerFeatures(false); } }, 4000);
   try {
     fetch('health', { cache: 'no-store' }).then(function(r){ return r.ok ? r.text() : ''; }).then(function(txt){
-      if (done || txt.trim() !== 'ok') return;
-      clearTimeout(to);
-      $('onlinePanel').hidden = false;
-    }, function(){});
-  } catch (e) {}
+      if (settled) return;
+      settled = true; clearTimeout(to);
+      offerServerFeatures(txt.trim() === 'ok');
+    }, function(){ if (!settled) { settled = true; clearTimeout(to); offerServerFeatures(false); } });
+  } catch (e) { settled = true; clearTimeout(to); offerServerFeatures(false); }
 }
+function offerServerFeatures(ok){
+  hasServer = ok;
+  $('authPanel').hidden = !ok || !!account;
+  $('homePanel').hidden = !ok || !account;
+  // Without a server, swapping invite codes by hand is the only way to reach a friend.
+  $('directPanel').hidden = false;
+  if (!ok) return;
+  if (account) connect();
+  if (params.get('room')) {
+    $('code').value = params.get('room').toUpperCase().slice(0, 4);
+    if (!account) toast(t('err.notLoggedIn'));
+  }
+}
+$('authPanel').hidden = true;
+$('homePanel').hidden = true;
 probeServer();
-if (isArtifact || location.protocol === 'file:') { $('onlinePanel').hidden = true; }
-else if (params.get('room')) { $('onlinePanel').hidden = false; $('code').value = params.get('room').toUpperCase().slice(0, 4); clearSession(); }
-else {
-  session = loadSession();
-  if (session) { mode = 'online'; connect(); }
-}
+
+// A game left running is not abandoned: coming back here signs straight back into it.
+window.addEventListener('pageshow', function(){ if (account && hasServer && (!ws || ws.readyState > 1)) connect(); });
 })();
 </script>
 </body>
